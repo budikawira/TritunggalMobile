@@ -1,9 +1,7 @@
 package com.inventory.app.mobile.utils.rest.response
 
-import com.inventory.app.mobile.models.TransferItem
+import com.inventory.app.mobile.models.Transfer
 
 class TransferListInitResponse : BaseResponse() {
-    var locationUpdate : String = ""
-    var locationCount : Int = 0
-    var transferItems : ArrayList<TransferItem>  = ArrayList<TransferItem>();
+    var transfers : ArrayList<Transfer>  = ArrayList<Transfer>();
 }

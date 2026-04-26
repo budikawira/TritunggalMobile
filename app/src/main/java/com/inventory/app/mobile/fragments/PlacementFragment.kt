@@ -30,6 +30,7 @@ import com.inventory.app.mobile.FLAG_UHFINFO
 import com.inventory.app.mobile.FLAG_UHFINFO_LIST
 import com.inventory.app.mobile.R
 import com.inventory.app.mobile.adapters.SimpleItemAdapter
+import com.inventory.app.mobile.databinding.FragmentPlacementBinding
 import com.inventory.app.mobile.databinding.FragmentTransferBinding
 import com.inventory.app.mobile.models.SimpleItem
 import com.inventory.app.mobile.utils.Params
@@ -54,25 +55,27 @@ import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import kotlin.getValue
 
 /**
  * A simple [Fragment] subclass.
- * Use the [TransferFragment.newInstance] factory method to
+ * Use the [PlacementFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class TransferFragment : BaseFragment(), SimpleItemAdapter.OnItemClick {
+class PlacementFragment : BaseFragment(), SimpleItemAdapter.OnItemClick {
     companion object {
-        private const val TAG = "TransferFragment"
+        private const val TAG = "PlacementFragment"
     }
 
     // Correct way to declare NavArgs
-    private val args: TransferFragmentArgs by navArgs()
+    private val args: PlacementFragmentArgs by navArgs()
 
-    private var _binding : FragmentTransferBinding? = null
+    private var _binding : FragmentPlacementBinding? = null
     private val binding get() = _binding!!
     private lateinit var appCtx : AppCtx
 
     private lateinit var mAdapter: SimpleItemAdapter
+    private var isConfirmAllowed = false
 
     private val lock = Any()
 
@@ -81,27 +84,7 @@ class TransferFragment : BaseFragment(), SimpleItemAdapter.OnItemClick {
 
     private val debugEpc = arrayOf("00000000","32364330303339FF")
 
-    private var isConfirmOutAllowed = false
     private var mId : Long = 0L
-
-//    private var handler: Handler = object : Handler(Looper.getMainLooper()) {
-//        override fun handleMessage(msg: Message) {
-//            if (msg.what == 1) {
-//                val info = msg.obj as UHFTAGInfo
-//                Log.i("::handleMessage", "SoFragment.info=$info")
-//                val tid = info.tid
-//                val epc = info.epc
-//                val user = info.user
-//                Log.i(
-//                    TAG,
-//                    "tid=" + tid + " epc=" + epc + " user=" + user + " info=" + info.rssi
-//                )
-//                updateScanData(epc)
-//            } else if (msg.what == 2) {
-//                this.removeMessages(2)
-//            }
-//        }
-//    }
 
     private val itemByEpcListener = object : Callback<GetItemByEpcResponse?> {
         override fun onResponse(
@@ -164,6 +147,7 @@ class TransferFragment : BaseFragment(), SimpleItemAdapter.OnItemClick {
             }
         }
     }
+
 
     private fun toggleScan() {
         mIsScanning = !mIsScanning
@@ -241,13 +225,14 @@ class TransferFragment : BaseFragment(), SimpleItemAdapter.OnItemClick {
         }
     }
 
+
     private fun updateScanData(epc: String) {
         synchronized(lock) {
             if (epc.isEmpty()) return
 
             if (mScannedEpc.contains(epc) ||
-                    mProcessingEpc.contains(epc)) return
-                mProcessingEpc.add(epc)
+                mProcessingEpc.contains(epc)) return
+            mProcessingEpc.add(epc)
 
         }
     }
@@ -274,22 +259,25 @@ class TransferFragment : BaseFragment(), SimpleItemAdapter.OnItemClick {
 //        }
     }
 
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        _binding = FragmentTransferBinding.inflate(inflater, container, false)
+        _binding = FragmentPlacementBinding.inflate(inflater, container, false)
 
         return binding.root
     }
+
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         appCtx = AppCtx.applicationContext()
         mainActivity?.currentFragment = this
         sessionManager = SessionManager(mainActivity!!)
-        isConfirmOutAllowed = sessionManager.getMenu().contains(Params.MENU_TRANSFER_CONFIRM_OUT)
+        isConfirmAllowed = sessionManager.getMenu().contains(Params.MENU_PLACEMENT_CONFIRM)
+
         ApiClient.setup(requireContext(), sessionManager.getServerUrl())
         apiInterface = ApiClient.client.create(ApiInterface::class.java)
 
@@ -312,16 +300,52 @@ class TransferFragment : BaseFragment(), SimpleItemAdapter.OnItemClick {
         binding.textPower.text = "$radioPower dB"
     }
 
+    private fun confirm() {
+        val simpleItems = mAdapter.getDataToUpload()
+        if (simpleItems.isNotEmpty()) {
+            showToast("Data upload is required before confirmation.")
+            return
+        }
+        val request = apiInterface.placementConfirm(
+            "Bearer " + sessionManager.getSessionId(),
+            TransferConfirmRequest(
+                mId))
+        request.enqueue(object : Callback<BaseResponse?> {
+            override fun onResponse(
+                call: Call<BaseResponse?>,
+                response: Response<BaseResponse?>
+            ) {
+                val result = response.body()
+                if (result != null) {
+                    if (result.result == BaseResponse.RESULT_OK) {
+                        showConfirmCompleteDialog()
+                    }
+                } else {
+                    Toast.makeText(requireContext(),
+                        "Upload fail! Please try again.", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(
+                call: Call<BaseResponse?>,
+                t: Throwable
+            ) {
+
+            }
+
+        })
+    }
+
     private fun uploadData() {
         var itemIds = ArrayList<Long>()
         var simpleItems = mAdapter.getDataToUpload()
         for (item in simpleItems) {
             itemIds.add(item.id)
         }
-        var request = apiInterface.transferUpload(
+        var request = apiInterface.placementUpload(
             "Bearer " + sessionManager.getSessionId(),
             TransferUploadRequest(
-            mId, itemIds))
+                mId, itemIds))
         request.enqueue(object : Callback<TransferUploadResponse?> {
             override fun onResponse(
                 call: Call<TransferUploadResponse?>,
@@ -355,7 +379,7 @@ class TransferFragment : BaseFragment(), SimpleItemAdapter.OnItemClick {
     }
 
     private fun init() {
-        var request = apiInterface.transferInit(
+        var request = apiInterface.placementInit(
             "Bearer " + sessionManager.getSessionId(),
             TransferInitRequest(mId))
         request.enqueue(object: Callback<TransferInitResponse?> {
@@ -368,7 +392,6 @@ class TransferFragment : BaseFragment(), SimpleItemAdapter.OnItemClick {
                 if (result != null) {
                     if (result.result == BaseResponse.RESULT_OK) {
                         binding.textNo.text = result.no
-                        binding.textSrc.text = result.srcLocationName
                         binding.textDest.text = result.destLocationName
                         mAdapter.initData(result.items, true)
                         mAdapter.notifyDataSetChanged()
@@ -388,9 +411,7 @@ class TransferFragment : BaseFragment(), SimpleItemAdapter.OnItemClick {
                 call: Call<TransferInitResponse?>,
                 t: Throwable
             ) {
-
             }
-
         })
     }
 
@@ -401,6 +422,7 @@ class TransferFragment : BaseFragment(), SimpleItemAdapter.OnItemClick {
     ) {
         //pop up menu to remove if the item is not yet uploaded
     }
+
 
     private fun showRefreshConfirmationDialog() {
         val builder = AlertDialog.Builder(requireContext())
@@ -436,13 +458,32 @@ class TransferFragment : BaseFragment(), SimpleItemAdapter.OnItemClick {
         dialog.show()
     }
 
+    private fun showConfirmCompleteDialog() {
+        val builder = AlertDialog.Builder(requireContext())
+
+        // Set the dialog title
+        builder.setTitle("Upload Completed")
+
+        builder.setMessage("Confirm successful.")
+
+        // Set the Positive button (Yes/Confirm)
+        builder.setPositiveButton("Ok") { dialog: DialogInterface, which: Int ->
+            findNavController().navigate(R.id.action_placementFragment_to_homeFragment)
+        }
+
+        // Create the AlertDialog
+        val dialog: AlertDialog = builder.create()
+        // Show the dialog
+        dialog.show()
+    }
+
     private fun showUploadCompleteDialog() {
         val builder = AlertDialog.Builder(requireContext())
 
         // Set the dialog title
         builder.setTitle("Upload Completed")
 
-        if (isConfirmOutAllowed) {
+        if (isConfirmAllowed) {
             // Set the dialog message
             builder.setMessage("Upload data successful! Finalize and Confirm placement?")
 
@@ -474,7 +515,7 @@ class TransferFragment : BaseFragment(), SimpleItemAdapter.OnItemClick {
 
         // Inflate the menu
         popup.menuInflater.inflate(R.menu.popup_menu, popup.menu)
-        if (!isConfirmOutAllowed) {
+        if (!isConfirmAllowed) {
             popup.menu.removeItem(R.id.action_confirm)
         }
         // Set click listener
@@ -489,7 +530,7 @@ class TransferFragment : BaseFragment(), SimpleItemAdapter.OnItemClick {
                     true
                 }
                 R.id.action_exit -> {
-                    findNavController().navigate(R.id.action_transferFragment_to_homeFragment)
+                    findNavController().navigate(R.id.action_placementFragment_to_homeFragment)
                     true
                 }
                 else -> false
@@ -500,62 +541,6 @@ class TransferFragment : BaseFragment(), SimpleItemAdapter.OnItemClick {
         popup.show()
     }
 
-    private fun confirm() {
-        val simpleItems = mAdapter.getDataToUpload()
-        if (simpleItems.isNotEmpty()) {
-            showToast("Data upload is required before confirmation.")
-            return
-        }
-        val request = apiInterface.transferConfirmOut(
-            "Bearer " + sessionManager.getSessionId(),
-            TransferConfirmRequest(
-                mId))
-        request.enqueue(object : Callback<BaseResponse?> {
-            override fun onResponse(
-                call: Call<BaseResponse?>,
-                response: Response<BaseResponse?>
-            ) {
-                val result = response.body()
-                if (result != null) {
-                    if (result.result == BaseResponse.RESULT_OK) {
-                        showConfirmCompleteDialog()
-                    }
-                } else {
-                    Toast.makeText(requireContext(),
-                        "Upload fail! Please try again.", Toast.LENGTH_SHORT).show()
-                }
-            }
-
-            override fun onFailure(
-                call: Call<BaseResponse?>,
-                t: Throwable
-            ) {
-            }
-
-        })
-    }
-
-    private fun showConfirmCompleteDialog() {
-        val builder = AlertDialog.Builder(requireContext())
-
-        // Set the dialog title
-        builder.setTitle("Upload Completed")
-
-        builder.setMessage("Confirm successful.")
-
-        // Set the Positive button (Yes/Confirm)
-        builder.setPositiveButton("Ok") { dialog: DialogInterface, which: Int ->
-            findNavController().navigate(R.id.action_transferFragment_to_homeFragment)
-        }
-
-        // Create the AlertDialog
-        val dialog: AlertDialog = builder.create()
-        // Show the dialog
-        dialog.show()
-    }
-
-
-
     @Synchronized
     private fun getUHFInfo(): List<UHFTAGInfo>? {
 
@@ -563,6 +548,7 @@ class TransferFragment : BaseFragment(), SimpleItemAdapter.OnItemClick {
         //return uhf?.readTagFromBufferList_EpcTidUser()
         return uhf!!.readTagFromBufferList()
     }
+
 
     inner class TagThread : Thread() {
         override fun run() {
@@ -655,4 +641,3 @@ class TransferFragment : BaseFragment(), SimpleItemAdapter.OnItemClick {
         }
     }
 }
-

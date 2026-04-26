@@ -14,6 +14,7 @@ import com.inventory.app.mobile.utils.rest.requests.RegisterRfidRequest
 import com.inventory.app.mobile.utils.rest.requests.ShipmentInitRequest
 import com.inventory.app.mobile.utils.rest.requests.ShipmentUploadRequest
 import com.inventory.app.mobile.utils.rest.requests.StockOpnameUploadRequest
+import com.inventory.app.mobile.utils.rest.requests.TransferConfirmRequest
 import com.inventory.app.mobile.utils.rest.requests.TransferInitRequest
 import com.inventory.app.mobile.utils.rest.requests.TransferUploadRequest
 import com.inventory.app.mobile.utils.rest.response.BaseObjectResponse
@@ -50,11 +51,15 @@ interface ApiInterface {
 
     @Headers("Accept: application/json")
     @POST("api/Rfid/Register")
-    fun registerRfid(@Body request: RegisterRfidRequest): Call<RegisterRfidResponse?>
+    fun registerRfid(
+        @Header("Authorization") jwtToken: String,
+        @Body request: RegisterRfidRequest): Call<RegisterRfidResponse?>
 
     @Headers("Accept: application/json")
     @POST("api/Rfid/GetItemByEpc")
-    fun getItemByEpc(@Body request: GetItemByEpcRequest): Call<GetItemByEpcResponse?>
+    fun getItemByEpc(
+        @Header("Authorization") jwtToken: String,
+        @Body request: GetItemByEpcRequest): Call<GetItemByEpcResponse?>
 
     @Headers("Accept: application/json")
     @POST("api/Rfid/GetEpcByStickerNo")
@@ -62,15 +67,52 @@ interface ApiInterface {
 
     @Headers("Accept: application/json")
     @POST("api/Inv/TransferListInit")
-    fun transferListInit(): Call<TransferListInitResponse?>
+    fun transferListInit(
+        @Header("Authorization") jwtToken: String): Call<TransferListInitResponse?>
 
     @Headers("Accept: application/json")
     @POST("api/Inv/TransferInit")
-    fun transferInit(@Body request: TransferInitRequest): Call<TransferInitResponse?>
+    fun transferInit(
+        @Header("Authorization") jwtToken: String,
+        @Body request: TransferInitRequest): Call<TransferInitResponse?>
 
     @Headers("Accept: application/json")
     @POST("api/Inv/TransferUpload")
-    fun transferUpload(@Body request: TransferUploadRequest): Call<TransferUploadResponse?>
+    fun transferUpload(
+        @Header("Authorization") jwtToken: String,
+        @Body request: TransferUploadRequest): Call<TransferUploadResponse?>
+
+    @Headers("Accept: application/json")
+    @POST("api/Inv/TransferConfirmOut")
+    fun transferConfirmOut(
+        @Header("Authorization") jwtToken: String,
+        @Body request: TransferConfirmRequest
+    ): Call<BaseResponse?>
+
+
+    @Headers("Accept: application/json")
+    @POST("api/Inv/PlacementListInit")
+    fun placementListInit(
+        @Header("Authorization") jwtToken: String): Call<TransferListInitResponse?>
+
+    @Headers("Accept: application/json")
+    @POST("api/Inv/PlacementInit")
+    fun placementInit(
+        @Header("Authorization") jwtToken: String,
+        @Body request: TransferInitRequest): Call<TransferInitResponse?>
+
+    @Headers("Accept: application/json")
+    @POST("api/Inv/PlacementUpload")
+    fun placementUpload(
+        @Header("Authorization") jwtToken: String,
+        @Body request: TransferUploadRequest): Call<TransferUploadResponse?>
+
+    @Headers("Accept: application/json")
+    @POST("api/Inv/PlacementConfirm")
+    fun placementConfirm(
+        @Header("Authorization") jwtToken: String,
+        @Body request: TransferConfirmRequest
+    ): Call<BaseResponse?>
 
     @Headers("Accept: application/json")
     @POST("api/Inv/ShipmentInit")

@@ -49,10 +49,10 @@ class LoginActivity : AppCompatActivity() {
         actionBar?.hide()
         sessionManager = SessionManager(this)
 
-        if (DEBUG) {
-            bindingContent.etUsername.setText("arei")
-            bindingContent.etPassword.setText("arei")
-        }
+//        if (DEBUG) {
+            bindingContent.etUsername.setText("dewi")
+            bindingContent.etPassword.setText("dewi")
+//        }
 
         bindingContent.btnLogin.setOnClickListener {
             bindingProgress.progress.visibility = View.VISIBLE
@@ -74,6 +74,7 @@ class LoginActivity : AppCompatActivity() {
                         }
                         if (result.result == BaseResponse.RESULT_OK && !result.data.isNullOrEmpty()) {
                             sessionManager.setSessionId(result.data!!)
+                            sessionManager.setMenu(result.menu)
                             startActivity(Intent(this@LoginActivity,
                                 MainActivity::class.java))
                         }

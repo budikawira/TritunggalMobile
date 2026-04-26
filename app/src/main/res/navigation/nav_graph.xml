@@ -24,6 +24,9 @@
         <action
             android:id="@+id/action_homeFragment_to_stockOpnameFragment"
             app:destination="@id/stockOpnameFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_placementListFragment"
+            app:destination="@id/placementListFragment" />
     </fragment>
     <fragment
         android:id="@+id/pairingFragment"
@@ -131,5 +134,29 @@
         <argument
             android:name="name"
             app:argType="string" />
+    </fragment>
+    <fragment
+        android:id="@+id/placementListFragment"
+        android:name="com.inventory.app.mobile.fragments.PlacementListFragment"
+        android:label="@string/placement"
+        tools:layout="@layout/fragment_placement_list">
+        <action
+            android:id="@+id/action_placementListFragment_to_homeFragment"
+            app:destination="@id/homeFragment" />
+        <action
+            android:id="@+id/action_placementListFragment_to_placementFragment"
+            app:destination="@id/placementFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/placementFragment"
+        android:name="com.inventory.app.mobile.fragments.PlacementFragment"
+        android:label="@string/placement"
+        tools:layout="@layout/fragment_placement">
+        <action
+            android:id="@+id/action_placementFragment_to_homeFragment"
+            app:destination="@id/homeFragment" />
+        <argument
+            android:name="id"
+            app:argType="long" />
     </fragment>
 </navigation>

@@ -1,18 +1,13 @@
 package com.inventory.app.mobile.adapters
 
-import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
 import com.inventory.app.mobile.AppCtx
 import com.inventory.app.mobile.R
 import com.inventory.app.mobile.databinding.RowSimpleItemBinding
-import com.inventory.app.mobile.databinding.RowTransferBinding
 import com.inventory.app.mobile.models.SimpleItem
-import com.inventory.app.mobile.models.TransferItem
-import java.util.Hashtable
 
 class SimpleItemAdapter (
     appCtx : AppCtx,

@@ -2,11 +2,14 @@ package com.inventory.app.mobile.fragments
 
 import android.animation.ArgbEvaluator
 import android.animation.ObjectAnimator
+import android.annotation.SuppressLint
+import android.bluetooth.BluetoothDevice
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
+import android.os.SystemClock
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -26,19 +29,25 @@ import cn.pedant.SweetAlert.SweetAlertDialog
 import com.google.mlkit.vision.barcode.BarcodeScanner
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
+import com.inventory.app.mobile.FLAG_FAIL
+import com.inventory.app.mobile.FLAG_START
+import com.inventory.app.mobile.FLAG_STOP
+import com.inventory.app.mobile.FLAG_SUCCESS
+import com.inventory.app.mobile.FLAG_UHFINFO
+import com.inventory.app.mobile.FLAG_UHFINFO_LIST
 import com.inventory.app.mobile.R
 import com.inventory.app.mobile.databinding.FragmentPairingBinding
 import com.inventory.app.mobile.utils.Params
+import com.inventory.app.mobile.utils.SPUtils
 import com.inventory.app.mobile.utils.SessionManager
 import com.inventory.app.mobile.utils.rest.ApiClient
 import com.inventory.app.mobile.utils.rest.ApiInterface
-import com.inventory.app.mobile.utils.rest.requests.BaseRequest
-import com.inventory.app.mobile.utils.rest.requests.RegisterRfidRequest
 import com.inventory.app.mobile.utils.rest.requests.RegisterRfidRecord
-import com.inventory.app.mobile.utils.rest.response.BaseObjectResponse
+import com.inventory.app.mobile.utils.rest.requests.RegisterRfidRequest
 import com.inventory.app.mobile.utils.rest.response.BaseResponse
 import com.inventory.app.mobile.utils.rest.response.RegisterRfidResponse
 import com.rscja.deviceapi.entity.UHFTAGInfo
+import com.rscja.deviceapi.interfaces.ConnectionStatus
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -52,9 +61,7 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 class PairingFragment : BaseFragment() {
-    companion object {
-        private const val TAG = "PairingFragment"
-    }
+    private val TAG = "PairingFragment"
     private var _binding : FragmentPairingBinding? = null
     private val binding get() = _binding!!
 
@@ -64,7 +71,6 @@ class PairingFragment : BaseFragment() {
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var barcodeScanner: BarcodeScanner
     private var isCameraRunning = false
-
     enum class Status {
         Init,
         ScanRfid,
@@ -72,13 +78,12 @@ class PairingFragment : BaseFragment() {
         UploadData
     }
 
-    private val debugQr = arrayOf("25G0001","25G0002")
+    private val debugQr = arrayOf("26C0033","25G0002")
     private val debugEpc = arrayOf("32354130393936","32354130393939")
     private var debugCount = 0
 
     private var status : Status = Status.ScanRfid
 
-    private var mIsScanning : Boolean = false
 
     private var handler: Handler = object : Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message) {
@@ -109,7 +114,7 @@ class PairingFragment : BaseFragment() {
         return binding.root
     }
 
-    private fun updateStatus(status : Status) {
+    fun updateStatus(status : Status) {
         this.status = status
         when (this.status) {
             Status.Init -> {
@@ -124,8 +129,10 @@ class PairingFragment : BaseFragment() {
                 binding.btnReset.visibility = View.GONE
                 binding.btnScan.visibility = View.VISIBLE
                 binding.btnScan.setText(R.string.start_scan)
-                val color = ContextCompat.getColor(requireContext(), R.color.primary)
-                binding.btnScan.backgroundTintList = ColorStateList.valueOf(color)
+                if (binding.btnScan.isEnabled) {
+                    val color = ContextCompat.getColor(requireContext(), R.color.primary)
+                    binding.btnScan.backgroundTintList = ColorStateList.valueOf(color)
+                }
             }
             Status.ScanRfid -> {
                 binding.textQr.text = "-"
@@ -216,11 +223,11 @@ class PairingFragment : BaseFragment() {
 
         binding.btnUpload.setOnClickListener {
             mainActivity?.showLoading(true)
-            var params = RegisterRfidRequest()
-            var rfid = binding.textRfid.text.toString()
-            var qr = binding.textQr.text.toString()
+            val params = RegisterRfidRequest()
+            val rfid = binding.textRfid.text.toString()
+            val qr = binding.textQr.text.toString()
             params.records.add(RegisterRfidRecord(rfid, qr))
-            var request = apiInterface.registerRfid(params)
+            val request = apiInterface.registerRfid("Bearer ${sessionManager.getSessionId()}", params)
             request.enqueue(object : Callback<RegisterRfidResponse?> {
                 override fun onResponse(
                     call: Call<RegisterRfidResponse?>,
@@ -267,6 +274,26 @@ class PairingFragment : BaseFragment() {
 
         binding.layoutPower.setOnClickListener {
             showPowerDialog()
+        }
+
+        binding.tvAddress.setOnClickListener {
+            if (mIsScanning) {
+                showToast(R.string.title_stop_read_card)
+            } else if (uhf?.connectStatus == ConnectionStatus.CONNECTING) {
+                showToast(R.string.connecting)
+            } else if (uhf?.connectStatus == ConnectionStatus.CONNECTED) {
+                disconnect(true)
+            } else {
+                sessionManager.setDeviceAddress("");
+                search()
+            }
+        }
+
+        if (!Params.DEBUG) {
+            initConnect()
+        } else {
+            binding.tvAddress.visibility = View.GONE
+            binding.btnScan.isEnabled = true
         }
     }
 
@@ -345,6 +372,7 @@ class PairingFragment : BaseFragment() {
         }
     }
 
+
     override fun onDestroy() {
         super.onDestroy()
         cameraExecutor.shutdown()
@@ -354,33 +382,41 @@ class PairingFragment : BaseFragment() {
     private fun toggleScan() {
         mIsScanning = !mIsScanning
         if (mIsScanning) {
-            if (mainActivity?.mReader != null) {
-                mainActivity?.mReader?.setInventoryCallback { uhftagInfo ->
-                    val msg = handler.obtainMessage()
-                    msg.obj = uhftagInfo
-                    msg.what = 1
-                    handler.sendMessage(msg)
-                    mainActivity?.playSound(1)
-                }
-                mainActivity?.mReader?.power = radioPower
-                var res = mainActivity?.mReader?.startInventoryTag()
-                if (res != null && res) {
-                    updateStatus(Status.ScanRfid)
-                    handler.sendEmptyMessageDelayed(2, 10)
-                } else {
-                    stopInventory()
-                    mIsScanning = false
-                }
-            }
+            TagThread().start()
+//            if (uhf != null) {
+//                uhf?.setInventoryCallback { uhftagInfo ->
+//                    val msg = handler.obtainMessage()
+//                    msg.obj = uhftagInfo
+//                    msg.what = 1
+//                    handler.sendMessage(msg)
+//                    mainActivity?.playSound(1)
+//                }
+//                if (!uhf!!.setPower(radioPower)) {
+//                    showToast("Set power failed")
+//                }
+//                val inventoryParameter: InventoryParameter = InventoryParameter()
+//                inventoryParameter.setResultData(
+//                    InventoryParameter.ResultData().setNeedPhase(false)
+//                )
+//                val res = uhf?.startInventoryTag(inventoryParameter)
+//                if (res != null && res) {
+//                    updateStatus(Status.ScanRfid)
+//                    handler.sendEmptyMessageDelayed(2, 10)
+//                } else {
+//                    stopInventory()
+//                    mIsScanning = false
+//                }
+//            }
         } else {
-            stopInventory()
+            //stopInventory()
             updateStatus(Status.Init)
         }
     }
 
     private fun stopInventory() {
-        if (mainActivity?.mReader != null) {
-            mainActivity?.mReader?.stopInventory()
+        mIsScanning = false
+        if (uhf != null) {
+            uhf?.stopInventory()
         } else {
             Toast.makeText(mainActivity, "Stop scaning inventory fail!", Toast.LENGTH_SHORT).show()
         }
@@ -390,9 +426,9 @@ class PairingFragment : BaseFragment() {
     }
 
     private fun updateScanData(epc: String) {
+        updateStatus(Status.ScanQR)
         binding.textRfid.text = epc
         stopInventory()
-        updateStatus(Status.ScanQR)
     }
 
 
@@ -417,6 +453,135 @@ class PairingFragment : BaseFragment() {
                 debugCount++
                 updateStatus(Status.UploadData)
             }
+        }
+    }
+
+
+    override fun onDestroyView() {
+        // Stop camera preview / analysis (camera-specific cleanup)
+        try {
+            stopCamera()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error stopping camera", e)
+        }
+
+        // Clear binding to avoid memory leaks
+        _binding = null
+
+        // Call super last — it handles UHF disconnect, timer, and scanning cleanup
+        super.onDestroyView()
+    }
+
+    // Called by BaseFragment.onDestroyView when mIsScanning is true
+    override fun onStopScanning() {
+        stopInventory()
+    }
+
+    // Called by BaseFragment.onDestroyView for any additional UHF cleanup
+    override fun onDestroyUHF() {
+        // No additional UHF resources to release in PairingFragment
+    }
+
+    override fun isScanning(): Boolean = mIsScanning
+
+    override fun onConnectionStateChange(connectionStatus: ConnectionStatus, device: BluetoothDevice?) {
+        if (connectionStatus == ConnectionStatus.CONNECTED) {
+            var address = remoteBTName
+            if (address.isNotEmpty()) address += "\n"
+            address += remoteBTAdd
+            binding.tvAddress.text = address
+            binding.btnScan.isEnabled = true
+        } else if (connectionStatus == ConnectionStatus.DISCONNECTED) {
+            binding.btnScan.isEnabled = false
+            binding.tvAddress.text = if (device != null) {
+                String.format("%s - %s\ndisconnected", remoteBTName, remoteBTAdd)
+            } else {
+                "disconnected"
+            }
+        }
+    }
+
+    val mHandlerTag = object : Handler(Looper.getMainLooper()) {
+        override fun handleMessage(msg: Message) {
+            when (msg.what) {
+                FLAG_STOP -> if (msg.arg1 == FLAG_SUCCESS) {
+                    updateStatus(Status.ScanRfid)
+                } else {
+                    mainActivity?.playSound(2)
+                    showToast("Gagal stop scan!")
+                }
+
+                FLAG_UHFINFO_LIST -> {
+                    val list = msg.obj as ArrayList<UHFTAGInfo>
+                    if (!list.isEmpty() && status == Status.ScanRfid) {
+                        val item = list[0]
+                        updateScanData(item.epc)
+                    }
+                }
+
+                FLAG_START -> if (msg.arg1 == FLAG_SUCCESS) {
+                    updateStatus(Status.ScanRfid)
+                } else {
+                    mainActivity?.playSound(2)
+                }
+
+                FLAG_UHFINFO -> {
+                    val info = msg.obj as UHFTAGInfo
+                    val list1 = java.util.ArrayList<UHFTAGInfo>()
+                    list1.add(info)
+                }
+            }
+        }
+    }
+
+    @Synchronized
+    private fun getUHFInfo(): List<UHFTAGInfo>? {
+
+        //旧主板才需要调用readTagFromBufferList_EpcTidUser 输出 RSSI
+        //return uhf?.readTagFromBufferList_EpcTidUser()
+        return uhf!!.readTagFromBufferList()
+    }
+
+    inner class TagThread : Thread() {
+        override fun run() {
+            val msg: Message = mHandlerTag.obtainMessage(FLAG_START)
+            Log.i(TAG, "startInventoryTag() 1")
+            if (!uhf!!.setPower(radioPower)) {
+                showToast("Set power failed")
+            }
+            if (!uhf!!.setEPCMode()) {
+                showToast("Set mode failed")
+            }
+            if (uhf!!.startInventoryTag()) {
+                //mStrTime = System.currentTimeMillis()
+                msg.arg1 = FLAG_SUCCESS
+            } else {
+                msg.arg1 = FLAG_FAIL
+                mIsScanning = false
+            }
+            mHandlerTag.sendMessage(msg)
+            //var startTime = System.currentTimeMillis()
+            while (mIsScanning) {
+                val list: List<UHFTAGInfo>? = getUHFInfo()
+                if (list.isNullOrEmpty()) {
+                    SystemClock.sleep(1)
+                    Log.i(TAG, "No Tag found")
+                } else {
+                    mainActivity?.playSound(1)
+                    mHandlerTag.sendMessage(mHandlerTag.obtainMessage(FLAG_UHFINFO_LIST, list))
+                }
+//                if (System.currentTimeMillis() - startTime > 10) {
+//                    startTime = System.currentTimeMillis()
+//                    mHandlerTag.sendEmptyMessage(FLAG_UPDATE_TIME)
+//                }
+//                //-------------------------
+//                if (System.currentTimeMillis() - mStrTime >= maxRunTime) {
+//                    isScanning = false
+//                    break
+//                }
+                //--------------------------------
+            }
+            stopInventory()
         }
     }
 }

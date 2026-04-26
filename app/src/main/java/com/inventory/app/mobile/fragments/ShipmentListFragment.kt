@@ -2,7 +2,6 @@ package com.inventory.app.mobile.fragments
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,17 +11,13 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.inventory.app.mobile.R
 import com.inventory.app.mobile.adapters.ShipmentItemAdapter
-import com.inventory.app.mobile.adapters.TransferItemAdapter
 import com.inventory.app.mobile.databinding.FragmentShipmentListBinding
-import com.inventory.app.mobile.databinding.FragmentTransferListBinding
 import com.inventory.app.mobile.models.ShipmentItem
-import com.inventory.app.mobile.models.TransferItem
 import com.inventory.app.mobile.utils.SessionManager
 import com.inventory.app.mobile.utils.rest.ApiClient
 import com.inventory.app.mobile.utils.rest.ApiInterface
 import com.inventory.app.mobile.utils.rest.response.BaseResponse
 import com.inventory.app.mobile.utils.rest.response.ShipmentListInitResponse
-import com.inventory.app.mobile.utils.rest.response.TransferListInitResponse
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response

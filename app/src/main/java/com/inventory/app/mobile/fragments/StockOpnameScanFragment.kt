@@ -20,45 +20,30 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.gson.Gson
 import com.inventory.app.mobile.AppCtx
 import com.inventory.app.mobile.R
-import com.inventory.app.mobile.adapters.SimpleItemAdapter
 import com.inventory.app.mobile.adapters.StockOpnameAdapter
-import com.inventory.app.mobile.adapters.TransferItemAdapter
 import com.inventory.app.mobile.databinding.FragmentStockOpnameScanBinding
-import com.inventory.app.mobile.databinding.FragmentTransferBinding
-import com.inventory.app.mobile.databinding.FragmentTransferListBinding
-import com.inventory.app.mobile.fragments.PairingFragment.Status
 import com.inventory.app.mobile.models.SimpleItem
 import com.inventory.app.mobile.models.StockOpnameItem
-import com.inventory.app.mobile.models.TransferItem
 import com.inventory.app.mobile.utils.Params
 import com.inventory.app.mobile.utils.SessionManager
 import com.inventory.app.mobile.utils.rest.ApiClient
 import com.inventory.app.mobile.utils.rest.ApiInterface
-import com.inventory.app.mobile.utils.rest.requests.GetItemByEpcRequest
 import com.inventory.app.mobile.utils.rest.requests.GetItemByLocationRequest
 import com.inventory.app.mobile.utils.rest.requests.StockOpnameUploadRequest
-import com.inventory.app.mobile.utils.rest.requests.TransferInitRequest
-import com.inventory.app.mobile.utils.rest.requests.TransferUploadRequest
 import com.inventory.app.mobile.utils.rest.response.BaseResponse
-import com.inventory.app.mobile.utils.rest.response.GetItemByEpcResponse
 import com.inventory.app.mobile.utils.rest.response.GetItemByLocationResponse
 import com.inventory.app.mobile.utils.rest.response.StockOpnameUploadResponse
-import com.inventory.app.mobile.utils.rest.response.TransferInitResponse
-import com.inventory.app.mobile.utils.rest.response.TransferUploadResponse
 import com.rscja.deviceapi.entity.UHFTAGInfo
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import kotlin.compareTo
 
 /**
  * A simple [Fragment] subclass.
@@ -80,7 +65,6 @@ class StockOpnameScanFragment : BaseFragment(), StockOpnameAdapter.OnItemClick {
     private lateinit var mAdapter: StockOpnameAdapter
 
     private val lock = Any()
-    private var mIsScanning = false
 
     private var mScannedEpc : ArrayList<String> = ArrayList() //processing or processed epc
     private var mProcessingEpc : ArrayList<String> = ArrayList() //just scanned epc
@@ -204,11 +188,11 @@ class StockOpnameScanFragment : BaseFragment(), StockOpnameAdapter.OnItemClick {
         super.onPause()
         try {
             handler.removeCallbacksAndMessages(null)
-            if (mainActivity?.mReader != null && mainActivity?.mReader!!.isInventorying) {
-                if (!mainActivity!!.mReader!!.stopInventory()) {
-                    Toast.makeText(mainActivity, "onPause :: Stop scaning inventory fail!", Toast.LENGTH_SHORT).show()
-                }
-            }
+//            if (mainActivity?.mReader != null && mainActivity?.mReader!!.isInventorying) {
+//                if (!mainActivity!!.mReader!!.stopInventory()) {
+//                    Toast.makeText(mainActivity, "onPause :: Stop scaning inventory fail!", Toast.LENGTH_SHORT).show()
+//                }
+//            }
         } catch (_ : Exception) {
 
         }

@@ -1,13 +1,18 @@
 package com.inventory.app.mobile.activities
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.ProgressDialog
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.media.AudioManager
 import android.media.SoundPool
 import android.os.Bundle
 import android.os.SystemClock
+import android.util.Log
 import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
@@ -25,27 +30,34 @@ import androidx.navigation.Navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
 import com.inventory.app.mobile.R
+import com.inventory.app.mobile.REQUEST_ENABLE_BT
+import com.inventory.app.mobile.REQUEST_SELECT_DEVICE
+import com.inventory.app.mobile.SHOW_HISTORY_CONNECTED_LIST
 import com.inventory.app.mobile.databinding.ActivityMainBinding
 import com.inventory.app.mobile.fragments.BaseFragment
+import com.inventory.app.mobile.utils.SessionManager
+import com.rscja.deviceapi.RFIDWithUHFBLE
 import com.rscja.deviceapi.RFIDWithUHFUART
+import com.rscja.deviceapi.interfaces.ConnectionStatus
+import com.rscja.deviceapi.interfaces.ConnectionStatusCallback
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var binding : ActivityMainBinding
-    private lateinit var navController : NavController
+    private lateinit var binding: ActivityMainBinding
+    private lateinit var navController: NavController
     private lateinit var appBarConfiguration: AppBarConfiguration
 
     var currentFragment: BaseFragment? = null
     var mReader: RFIDWithUHFUART? = null
+
     var soundMap: HashMap<Int?, Int?> = HashMap<Int?, Int?>()
     private var soundPool: SoundPool? = null
     private var volumnRatio = 0f
     private var am: AudioManager? = null
     private var playSoundThread: PlaySoundThread? = null
 
-    private var mypDialog: ProgressDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,58 +69,17 @@ class MainActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         navController = findNavController(this, R.id.nav_host_fragment_content_main)
         appBarConfiguration = AppBarConfiguration.Builder(navController.graph).build()
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration)
 
         checkPermission()
         initSound()
-        initUHF()
+        //initUHF()
     }
 
-    fun initUHF() {
-        try {
-            mReader = RFIDWithUHFUART.getInstance()
-        } catch (ex: java.lang.Exception) {
-            toastMessage(ex.message)
 
-            return
-        }
-
-        if (mReader != null) {
-            // Show progress dialog on the main thread
-            mypDialog = ProgressDialog(this).apply { // Use requireContext() for Fragments
-                setProgressStyle(ProgressDialog.STYLE_SPINNER)
-                setMessage("init...")
-                setCanceledOnTouchOutside(false)
-                show()
-            }
-
-            // Launch a coroutine in the lifecycleScope of the Fragment/Activity
-            // This coroutine will be cancelled when the Fragment/Activity is destroyed
-            lifecycleScope.launch {
-                val result = withContext(Dispatchers.IO) {
-                    // Perform the potentially long-running operation on a background thread (IO dispatcher)
-                    // Assuming mReader.init returns a Boolean and requires a Context (like your original `this@MainActivity`)
-                    // You might need to adjust `mReader.init` if it expects a specific Context type
-                    // For a Fragment, use requireActivity() or requireContext()
-                    // If mReader.init truly takes a MainActivity, then you'd need `activity as MainActivity`
-                    // Let's assume it can take a standard Context
-                    mReader?.init(applicationContext) // Replace with your actual mReader instance
-                }
-
-                // After the background task completes, switch back to the Main thread
-                // to update UI and dismiss the dialog
-                mypDialog?.dismiss() // Use dismiss() instead of cancel() for ProgressDialog
-
-                if (result == null || !result) {
-                    Toast.makeText(this@MainActivity, "init fail", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(this@MainActivity, "init success", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
 
     fun toastMessage(msg: String?) {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
@@ -151,7 +122,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private class PlaySoundThread : Thread() {
-        var mainActivity : MainActivity? = null
+        var mainActivity: MainActivity? = null
         private val objectLock = Any()
         private var isStop = false
         var interval: Int = 500
@@ -211,16 +182,34 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkPermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), 100)
+        val permissions = mutableListOf(Manifest.permission.CAMERA)
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            permissions.add(Manifest.permission.BLUETOOTH_SCAN)
+            permissions.add(Manifest.permission.BLUETOOTH_CONNECT)
+            permissions.add(Manifest.permission.BLUETOOTH_ADVERTISE)
+        }
+        permissions.add(Manifest.permission.BLUETOOTH)
+        permissions.add(Manifest.permission.BLUETOOTH_ADMIN)
+        permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
+        permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION)
+
+
+        val notGranted = permissions.filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }
+
+        if (notGranted.isNotEmpty()) {
+            ActivityCompat.requestPermissions(this, notGranted.toTypedArray(), 100)
         }
     }
+
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
 //        val currentDestination = navController.currentDestination
 //        if (currentDestination?.id == R.id.homeFragment) {
-            val inflater = menuInflater
-            inflater.inflate(R.menu.main_menu, menu)
+        val inflater = menuInflater
+        inflater.inflate(R.menu.main_menu, menu)
 //        } else if (currentDestination?.id == R.id.historyFragment) {
 //            val inflater = menuInflater
 //            inflater.inflate(R.menu.history_menu, menu)
@@ -236,6 +225,7 @@ class MainActivity : AppCompatActivity() {
                 finish()
                 return true
             }
+
             else -> return super.onOptionsItemSelected(item)
         }
     }
@@ -244,14 +234,13 @@ class MainActivity : AppCompatActivity() {
         return navController.navigateUp() || super.onSupportNavigateUp()
     }
 
-    fun showLoading(show : Boolean) {
+    fun showLoading(show: Boolean) {
         if (show) {
             binding.contentProgress.progress.visibility = View.VISIBLE
         } else {
             binding.contentProgress.progress.visibility = View.GONE
         }
     }
-
 
     override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
         if (keyCode == 139 || keyCode == 280 || keyCode == 293) {

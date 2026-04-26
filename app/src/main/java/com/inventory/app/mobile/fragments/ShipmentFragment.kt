@@ -68,12 +68,11 @@ class ShipmentFragment : BaseFragment(), SimpleItemAdapter.OnItemClick {
     private lateinit var mAdapter: SimpleItemAdapter
 
     private val lock = Any()
-    private var mIsScanning = false
 
     private var mScannedEpc : ArrayList<String> = ArrayList() //processing or processed epc
     private var mProcessingEpc : ArrayList<String> = ArrayList() //just scanned epc
 
-    private val debugEpc = arrayOf("32364135323932FF","32354130393939")
+    private val debugEpc = arrayOf("00000000","32364330303339FF")
 
     private var mId : Long = 0L
 
@@ -150,7 +149,9 @@ class ShipmentFragment : BaseFragment(), SimpleItemAdapter.OnItemClick {
             if (epcList.isNotEmpty()) {
                 Log.d(TAG, "------------ getItemByEpc ------------")
                 Log.d(TAG, "epcList : ${Gson().toJson(epcList)}")
-                var request = apiInterface.getItemByEpc(GetItemByEpcRequest(epcList))
+                var request = apiInterface.getItemByEpc(
+                    "Bearer " + sessionManager.getSessionId(),
+                    GetItemByEpcRequest(epcList))
                 request.enqueue(itemByEpcListener)
             }
         }
@@ -245,11 +246,11 @@ class ShipmentFragment : BaseFragment(), SimpleItemAdapter.OnItemClick {
 
     override fun onPause() {
         super.onPause()
-        if (mainActivity?.mReader != null && mainActivity!!.mReader!!.isInventorying) {
-            if (!mainActivity!!.mReader!!.stopInventory()) {
-                Toast.makeText(mainActivity, "onPause :: Stop scaning inventory fail!", Toast.LENGTH_SHORT).show()
-            }
-        }
+//        if (mainActivity?.mReader != null && mainActivity!!.mReader!!.isInventorying) {
+//            if (!mainActivity!!.mReader!!.stopInventory()) {
+//                Toast.makeText(mainActivity, "onPause :: Stop scaning inventory fail!", Toast.LENGTH_SHORT).show()
+//            }
+//        }
     }
 
     private fun init() {

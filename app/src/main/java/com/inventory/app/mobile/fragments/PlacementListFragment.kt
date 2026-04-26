@@ -12,6 +12,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.inventory.app.mobile.R
 import com.inventory.app.mobile.adapters.TransferItemAdapter
+import com.inventory.app.mobile.databinding.FragmentPlacementListBinding
 import com.inventory.app.mobile.databinding.FragmentTransferListBinding
 import com.inventory.app.mobile.models.Transfer
 import com.inventory.app.mobile.utils.SessionManager
@@ -23,17 +24,11 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-
-/**
- * A simple [Fragment] subclass.
- * Use the [TransferListFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
-class TransferListFragment : BaseFragment() {
+class PlacementListFragment : BaseFragment() {
     companion object {
-        private const val TAG = "TransferListFragment"
+        private const val TAG = "PlacementListFragment"
     }
-    private var _binding : FragmentTransferListBinding? = null
+    private var _binding : FragmentPlacementListBinding? = null
     private val binding get() = _binding!!
     private lateinit var adapter: TransferItemAdapter
 
@@ -42,14 +37,14 @@ class TransferListFragment : BaseFragment() {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        _binding = FragmentTransferListBinding.inflate(inflater, container, false)
+        _binding = FragmentPlacementListBinding.inflate(inflater, container, false)
 
         return binding.root
     }
 
     private fun init() {
         mainActivity?.showLoading(true)
-        var request = apiInterface.transferListInit(
+        var request = apiInterface.placementListInit(
             "Bearer " + sessionManager.getSessionId())
         request.enqueue(object : Callback<TransferListInitResponse?> {
             @SuppressLint("NotifyDataSetChanged")
@@ -92,12 +87,13 @@ class TransferListFragment : BaseFragment() {
                 position: Int,
                 transferItem: Transfer
             ) {
-                val action = TransferListFragmentDirections
-                    .actionTransferListFragmentToTransferFragment(id = transferItem.id)
+                val action = PlacementListFragmentDirections
+                    .actionPlacementListFragmentToPlacementFragment(id = transferItem.id)
                 findNavController().navigate(action)
             }
-
         })
+        adapter.isPlacement = true
+
         binding.recyclerView.layoutManager = LinearLayoutManager(context)
         binding.recyclerView.adapter = adapter
 
@@ -123,7 +119,7 @@ class TransferListFragment : BaseFragment() {
                     true
                 }
                 R.id.action_exit -> {
-                    findNavController().navigate(R.id.action_placementListFragment_to_homeFragment)
+                    findNavController().navigate(R.id.action_transferListFragment_to_homeFragment)
                     true
                 }
                 else -> false

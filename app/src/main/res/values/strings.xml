@@ -15,7 +15,9 @@
     <string name="rfid_power">RFID Power</string>
     <string name="rfid_pairing">RFID Pairing</string>
     <string name="stock_opname">Stock Opname</string>
-    <string name="transfer">Transfer</string>
+    <string name="placement">Placement</string>
+    <string name="transfer">Transfer Out</string>
+    <string name="transfer_in">Transfer Received</string>
     <string name="shipment">Shipment</string>
     <string name="find_assets">Find Assets</string>
     <string name="rfid_number">RFID Number</string>
@@ -41,4 +43,34 @@
     <string name="start_stock_opname">Start Stock Opname</string>
     <string name="searchRange">Search range</string>
     <string name="dash">-</string>
+    <string name="from">From: </string>
+    <string name="to">To: </string>
+    <string name="confirm">Confirm</string>
+
+    <string name="ble_not_supported">Device does not support BLE</string>
+    <string name="invalid_bluetooth_address">Bluettoh Device not available!</string>
+    <string name="connect_reader">Connect device</string>
+    <string name="title_stop_read_card">Please stop reading tags!</string>
+
+    <!-- DeviceListActivity -->
+    <string name="scanning">Scanning...</string>
+    <string name="select_device">Select a device</string>
+    <string name="none_paired">No Matching</string>
+    <string name="none_found">Not found</string>
+    <string name="title_paired_devices">Matched</string>
+    <string name="title_other_devices">Other Devices</string>
+    <string name="button_scan">Scan</string>
+    <string name="title_activity_uhfmain">UHF</string>
+    <string name="scan">Scan</string>
+    <string name="paired">paired</string>
+    <string name="history_connected_device">Historically connected devices</string>
+    <string name="clear_historical_records">Empty historical records</string>
+    <string name="no_history">No history</string>
+
+    <string name="connecting">Connecting</string>
+    <string name="connect_success">Successful connection</string>
+    <string name="disconnect">Disconnected!</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
 </resources>

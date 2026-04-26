@@ -3,12 +3,9 @@ package com.inventory.app.mobile.adapters
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
-import com.inventory.app.mobile.AppCtx
 import com.inventory.app.mobile.databinding.RowTransferBinding
 import com.inventory.app.mobile.models.ShipmentItem
-import com.inventory.app.mobile.models.TransferItem
 
 class ShipmentItemAdapter (
     var data: ArrayList<ShipmentItem>,

@@ -40,24 +40,46 @@
                 />
 
             <TextView
+                android:id="@+id/textSrcLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/from"
+                android:textSize="16sp"
+                android:layout_marginTop="8dp"
+                android:textColor="@color/primary"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/textNo"
+                />
+
+            <TextView
                 android:id="@+id/textSrc"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginStart="8dp"
                 android:textSize="16sp"
-                app:layout_constraintTop_toBottomOf="@id/textNo"
+                app:layout_constraintTop_toTopOf="@id/textSrcLabel"
+                app:layout_constraintStart_toEndOf="@id/textSrcLabel"
+                />
+            <TextView
+                android:id="@+id/textDestLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/to"
+                android:textSize="16sp"
+                android:layout_marginTop="4dp"
+                android:textColor="@color/primary"
                 app:layout_constraintStart_toStartOf="parent"
-                android:text="Location A" />
-
+                app:layout_constraintTop_toBottomOf="@id/textSrc"
+                />
             <TextView
                 android:id="@+id/textDest"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginStart="8dp"
                 android:textSize="16sp"
-                app:layout_constraintTop_toBottomOf="@id/textNo"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:text="Location B" />
+                app:layout_constraintTop_toTopOf="@id/textDestLabel"
+                app:layout_constraintStart_toEndOf="@id/textDestLabel"
+                />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
