@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".fragments.StockOpnameFragment"
+    tools:context=".fragments.ShipmentCreateFragment"
     android:padding="8dp"
     >
 
@@ -167,14 +167,6 @@
         app:layout_constraintTop_toBottomOf="@id/labelLocation4" />
 
     <!-- Bottom button -->
-    <CheckBox
-        android:id="@+id/chkSubLoc"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/include_sublocation"
-        app:layout_constraintBottom_toTopOf="@id/buttonStart"
-        android:checked="false"/>
-
     <Button
         android:id="@+id/buttonStart"
         android:layout_width="match_parent"

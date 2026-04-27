@@ -22,12 +22,14 @@
             android:paddingEnd="0dp"
             android:src="@drawable/ic_more_vert"
             style="@style/PrimaryButtonStyle"
+            android:visibility="gone"
             />
         <Button
             android:layout_width="match_parent"
             android:layout_height="56dp"
             style="@style/PrimaryButtonStyle"
             android:text="@string/create"
+            android:id="@+id/btnCreate"
             />
     </LinearLayout>
     <androidx.recyclerview.widget.RecyclerView

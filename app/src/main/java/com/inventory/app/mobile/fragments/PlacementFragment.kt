@@ -1,6 +1,7 @@
 package com.inventory.app.mobile.fragments
 
 import android.annotation.SuppressLint
+import android.bluetooth.BluetoothDevice
 import android.content.DialogInterface
 import android.content.res.ColorStateList
 import android.os.Bundle
@@ -46,6 +47,7 @@ import com.inventory.app.mobile.utils.rest.response.GetItemByEpcResponse
 import com.inventory.app.mobile.utils.rest.response.TransferInitResponse
 import com.inventory.app.mobile.utils.rest.response.TransferUploadResponse
 import com.rscja.deviceapi.entity.UHFTAGInfo
+import com.rscja.deviceapi.interfaces.ConnectionStatus
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -239,11 +241,17 @@ class PlacementFragment : BaseFragment(), SimpleItemAdapter.OnItemClick {
 
     private fun stopInventory() {
         mScannedEpc.clear()
-        if (mainActivity?.mReader != null) {
-            mainActivity?.mReader?.stopInventory()
+        mIsScanning = false
+        if (uhf != null) {
+            uhf?.stopInventory()
         } else {
             Toast.makeText(mainActivity, "Stop scaning inventory fail!", Toast.LENGTH_SHORT).show()
         }
+//        if (mainActivity?.mReader != null) {
+//            mainActivity?.mReader?.stopInventory()
+//        } else {
+//            Toast.makeText(mainActivity, "Stop scaning inventory fail!", Toast.LENGTH_SHORT).show()
+//        }
     }
 
     override fun ReaderOnKeyDwon() {
@@ -292,7 +300,23 @@ class PlacementFragment : BaseFragment(), SimpleItemAdapter.OnItemClick {
         binding.buttonUpload.setOnClickListener { uploadData() }
         binding.textPower.setOnClickListener { showPowerDialog() }
         mId = args.id
+
         init()
+
+        binding.tvAddress.setOnClickListener {
+            if (mIsScanning) {
+                showToast(R.string.title_stop_read_card)
+            } else if (uhf?.connectStatus == ConnectionStatus.CONNECTING) {
+                showToast(R.string.connecting)
+            } else if (uhf?.connectStatus == ConnectionStatus.CONNECTED) {
+                disconnect(true)
+            } else {
+                sessionManager.setDeviceAddress("");
+                search()
+            }
+        }
+        binding.tvAddress.setText(R.string.connecting)
+        initConnect()
     }
 
     override fun onPowerUpdated() {
@@ -322,7 +346,7 @@ class PlacementFragment : BaseFragment(), SimpleItemAdapter.OnItemClick {
                     }
                 } else {
                     Toast.makeText(requireContext(),
-                        "Upload fail! Please try again.", Toast.LENGTH_SHORT).show()
+                        "Confirm fail! Please try again.", Toast.LENGTH_SHORT).show()
                 }
             }
 
@@ -549,6 +573,24 @@ class PlacementFragment : BaseFragment(), SimpleItemAdapter.OnItemClick {
         return uhf!!.readTagFromBufferList()
     }
 
+    override fun isScanning(): Boolean = mIsScanning
+
+    override fun onConnectionStateChange(connectionStatus: ConnectionStatus, device: BluetoothDevice?) {
+        if (connectionStatus == ConnectionStatus.CONNECTED) {
+            var address = remoteBTName
+            if (address.isNotEmpty()) address += "\n"
+            address += remoteBTAdd
+            binding.tvAddress.text = address
+            binding.buttonScan.isEnabled = true
+        } else if (connectionStatus == ConnectionStatus.DISCONNECTED) {
+            binding.buttonScan.isEnabled = false
+            binding.tvAddress.text = if (device != null) {
+                String.format("%s - %s\ndisconnected", remoteBTName, remoteBTAdd)
+            } else {
+                "disconnected"
+            }
+        }
+    }
 
     inner class TagThread : Thread() {
         override fun run() {

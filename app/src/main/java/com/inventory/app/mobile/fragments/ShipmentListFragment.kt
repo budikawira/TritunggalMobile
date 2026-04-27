@@ -11,13 +11,17 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.inventory.app.mobile.R
 import com.inventory.app.mobile.adapters.ShipmentItemAdapter
+import com.inventory.app.mobile.adapters.TransferItemAdapter
 import com.inventory.app.mobile.databinding.FragmentShipmentListBinding
 import com.inventory.app.mobile.models.ShipmentItem
+import com.inventory.app.mobile.models.Transfer
+import com.inventory.app.mobile.utils.Params
 import com.inventory.app.mobile.utils.SessionManager
 import com.inventory.app.mobile.utils.rest.ApiClient
 import com.inventory.app.mobile.utils.rest.ApiInterface
 import com.inventory.app.mobile.utils.rest.response.BaseResponse
 import com.inventory.app.mobile.utils.rest.response.ShipmentListInitResponse
+import com.inventory.app.mobile.utils.rest.response.TransferListInitResponse
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -30,7 +34,7 @@ class ShipmentListFragment : BaseFragment() {
     private var _binding : FragmentShipmentListBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var adapter: ShipmentItemAdapter
+    private lateinit var adapter: TransferItemAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -44,18 +48,19 @@ class ShipmentListFragment : BaseFragment() {
 
     private fun init() {
         mainActivity?.showLoading(true)
-        var request = apiInterface.shipmentListInit()
-        request.enqueue(object : Callback<ShipmentListInitResponse?> {
+        var request = apiInterface.shipmentListInit(
+            "Bearer " + sessionManager.getSessionId())
+        request.enqueue(object : Callback<TransferListInitResponse?> {
             @SuppressLint("NotifyDataSetChanged")
             override fun onResponse(
-                call: Call<ShipmentListInitResponse?>,
-                response: Response<ShipmentListInitResponse?>
+                call: Call<TransferListInitResponse?>,
+                response: Response<TransferListInitResponse?>
             ) {
                 mainActivity?.showLoading(false)
                 var result = response.body()
                 if (result != null) {
                     if (result.result == BaseResponse.RESULT_OK) {
-                        adapter.data = result.shipItems
+                        adapter.data = result.transfers
                         adapter.notifyDataSetChanged()
                     }
                 } else {
@@ -64,7 +69,7 @@ class ShipmentListFragment : BaseFragment() {
             }
 
             override fun onFailure(
-                call: Call<ShipmentListInitResponse?>,
+                call: Call<TransferListInitResponse?>,
                 t: Throwable
             ) {
                 mainActivity?.showLoading(false)
@@ -81,22 +86,28 @@ class ShipmentListFragment : BaseFragment() {
         ApiClient.setup(requireContext(), sessionManager.getServerUrl())
         apiInterface = ApiClient.client.create(ApiInterface::class.java)
 
-        adapter = ShipmentItemAdapter(ArrayList<ShipmentItem>(), object : ShipmentItemAdapter.OnItemClick {
+        adapter = TransferItemAdapter(ArrayList<Transfer>(), object : TransferItemAdapter.OnItemClick {
             override fun onClick(
                 position: Int,
-                shipmentItem: ShipmentItem
+                transferItem: Transfer
             ) {
                 val action = ShipmentListFragmentDirections
-                    .actionShipmentListFragmentToShipmentFragment(id = shipmentItem.id)
+                    .actionShipmentListFragmentToShipmentFragment(id = transferItem.id)
                 findNavController().navigate(action)
             }
-
         })
+        adapter.isShipment = true
         binding.recyclerView.layoutManager = LinearLayoutManager(context)
         binding.recyclerView.adapter = adapter
 
         binding.btnMore.setOnClickListener { view ->
             showPopUp(view)
+        }
+        binding.btnCreate.setOnClickListener {
+            findNavController().navigate(R.id.action_shipmentListFragment_to_shipmentCreateFragment)
+        }
+        if (sessionManager.getMenu().contains(Params.MENU_SHIPMENT_CREATE)) {
+            binding.layoutBottom.visibility = View.VISIBLE
         }
 
         init()
@@ -126,5 +137,10 @@ class ShipmentListFragment : BaseFragment() {
 
         // Show the menu
         popup.show()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

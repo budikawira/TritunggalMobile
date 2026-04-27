@@ -42,6 +42,7 @@ import com.inventory.app.mobile.utils.rest.ApiInterface
 import com.rscja.deviceapi.RFIDWithUHFBLE
 import com.rscja.deviceapi.interfaces.ConnectionStatus
 import com.rscja.deviceapi.interfaces.ConnectionStatusCallback
+import com.rscja.deviceapi.interfaces.KeyEventCallback
 import java.util.Timer
 import java.util.TimerTask
 import kotlin.ranges.rangeTo
@@ -118,6 +119,17 @@ open class BaseFragment : Fragment(), ConnectionStatusCallback<Any> {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         onPowerUpdated()
+
+        uhf?.setKeyEventCallback(object : KeyEventCallback {
+            override fun onKeyDown(p0: Int) {
+                ReaderOnKeyDwon()
+            }
+
+            override fun onKeyUp(p0: Int) {
+
+            }
+
+        })
     }
 
     protected fun showMessage(text: String, dialogType : Int = SweetAlertDialog.SUCCESS_TYPE,

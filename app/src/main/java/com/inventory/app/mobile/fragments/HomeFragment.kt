@@ -60,6 +60,9 @@ class HomeFragment : BaseFragment() {
         if (!menu.contains(Params.MENU_TRANSFER)) {
             binding.cardTransfer.visibility = View.GONE
         }
+        if (!menu.contains(Params.MENU_TRANSFER_CONFIRM_IN)) {
+            binding.cardTransferIn.visibility = View.GONE
+        }
 
         binding.cardShipment.setOnClickListener {
             findNavController().navigate(R.id.action_homeFragment_to_shipmentListFragment)

@@ -37,6 +37,11 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
+            android:name=".activities.DialogListActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.AppCompat.Light.Dialog" />
+        <activity
             android:name=".activities.DeviceListActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AlertNoActionBar" />

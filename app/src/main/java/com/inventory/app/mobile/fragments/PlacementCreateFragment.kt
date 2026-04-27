@@ -1,39 +1,48 @@
 package com.inventory.app.mobile.fragments
 
 import android.app.Activity
+import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.navigation.fragment.findNavController
 import com.inventory.app.mobile.R
 import com.inventory.app.mobile.activities.DialogListActivity
-import com.inventory.app.mobile.databinding.FragmentStockOpnameBinding
+import com.inventory.app.mobile.databinding.FragmentPlacementCreateBinding
 import com.inventory.app.mobile.models.Select2Item
 import com.inventory.app.mobile.utils.SessionManager
 import com.inventory.app.mobile.utils.rest.ApiClient
 import com.inventory.app.mobile.utils.rest.ApiInterface
+import com.inventory.app.mobile.utils.rest.requests.PlacementCreateRequest
+import com.inventory.app.mobile.utils.rest.response.BaseResponse
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
-class StockOpnameFragment : BaseFragment() {
+
+class PlacementCreateFragment : BaseFragment() {
     companion object {
-        private const val TAG = "StockOpnameFragment"
-        private const val REQUEST_LOCATION   = 1001
-        private const val REQUEST_SHELF      = 1002
-        private const val REQUEST_SHELF_SLOT = 1003
-        private const val REQUEST_LOCATION3  = 1004
-        private const val REQUEST_LOCATION4  = 1005
+        private const val TAG = "PlacementCreateFragment"
+        private const val REQUEST_LOCATION = 1001
+        private const val REQUEST_LOCATION1 = 1002
+        private const val REQUEST_LOCATION2 = 1003
+        private const val REQUEST_LOCATION3 = 1004
+        private const val REQUEST_LOCATION4 = 1005
     }
 
-    private var _binding: FragmentStockOpnameBinding? = null
+    private var _binding: FragmentPlacementCreateBinding? = null
     private val binding get() = _binding!!
 
-    private var selectedLocation:  Select2Item? = null
+    private var selectedLocation: Select2Item? = null
     private var selectedLocation1: Select2Item? = null
     private var selectedLocation2: Select2Item? = null
     private var selectedLocation3: Select2Item? = null
@@ -43,7 +52,7 @@ class StockOpnameFragment : BaseFragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentStockOpnameBinding.inflate(inflater, container, false)
+        _binding = FragmentPlacementCreateBinding.inflate(inflater, container, false)
         sessionManager = SessionManager(requireContext())
         ApiClient.setup(requireContext(), sessionManager.getServerUrl())
         apiInterface = ApiClient.client.create(ApiInterface::class.java)
@@ -54,7 +63,7 @@ class StockOpnameFragment : BaseFragment() {
         mainActivity?.currentFragment = this
         super.onViewCreated(view, savedInstanceState)
 
-        binding.textLocation.setOnClickListener  { openLocationDialog() }
+        binding.textLocation.setOnClickListener { openLocationDialog() }
         binding.textLocation1.setOnClickListener { openLocation1Dialog() }
         binding.textLocation2.setOnClickListener { openShelfSlotDialog() }
         binding.textLocation3.setOnClickListener { openLocation3Dialog() }
@@ -82,21 +91,53 @@ class StockOpnameFragment : BaseFragment() {
                 showToast("Please select the location")
                 return@setOnClickListener
             }
-            val names = arrayListOf<String>()
-            selectedLocation?.let  { names.add(it.text) }
-            selectedLocation1?.let { names.add(it.text) }
-            selectedLocation2?.let { names.add(it.text) }
-            selectedLocation3?.let { names.add(it.text) }
-            selectedLocation4?.let { names.add(it.text) }
-            val action = StockOpnameFragmentDirections
-                .actionStockOpnameFragmentToStockOpnameScanFragment(
-                    locationId  = selectedLocationId,
-                    includeSubLocation = binding.chkSubLoc.isChecked,
-                    name        = names.joinToString(" ➤ ")
-                )
-            findNavController().navigate(action)
+
+            val request = apiInterface.placementCreate(
+                "Bearer " + sessionManager.getSessionId(),
+                PlacementCreateRequest(selectedLocationId)
+            )
+            request.enqueue(object : Callback<BaseResponse?> {
+                override fun onResponse(
+                    call: Call<BaseResponse?>,
+                    response: Response<BaseResponse?>
+                ) {
+                    val result = response.body()
+                    if (result != null) {
+                        if (result.result == BaseResponse.RESULT_OK) {
+                            showConfirmCompleteDialog()
+                        }
+                    } else {
+                        Toast.makeText(requireContext(),
+                            "Create fail! Please try again.", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                override fun onFailure(call: Call<BaseResponse?>, t: Throwable) {
+
+                }
+            })
+
         }
     }
+
+    private fun showConfirmCompleteDialog() {
+        val builder = AlertDialog.Builder(requireContext())
+
+        // Set the dialog title
+        builder.setTitle("Completed")
+
+        builder.setMessage("Create placement successful.")
+
+        // Set the Positive button (Yes/Confirm)
+        builder.setPositiveButton("Ok") { dialog: DialogInterface, which: Int ->
+            findNavController().navigate(R.id.action_placementCreateFragment_to_placementListFragment)
+        }
+
+        // Create the AlertDialog
+        val dialog: AlertDialog = builder.create()
+        // Show the dialog
+        dialog.show()
+    }
+
 
     // ── Open dialogs ─────────────────────────────────────────────────────────
 
@@ -109,7 +150,7 @@ class StockOpnameFragment : BaseFragment() {
             Toast.makeText(context, "Please select a location first.", Toast.LENGTH_SHORT).show()
             return
         }
-        startDialog(REQUEST_SHELF, getString(R.string.location_level_1), 1, parentId)
+        startDialog(REQUEST_LOCATION1, getString(R.string.location_level_1), 1, parentId)
     }
 
     private fun openShelfSlotDialog() {
@@ -117,7 +158,7 @@ class StockOpnameFragment : BaseFragment() {
             Toast.makeText(context, "Please select a shelf first.", Toast.LENGTH_SHORT).show()
             return
         }
-        startDialog(REQUEST_SHELF_SLOT, getString(R.string.location_level_2), 2, parentId)
+        startDialog(REQUEST_LOCATION2, getString(R.string.location_level_2), 2, parentId)
     }
 
     private fun openLocation3Dialog() {
@@ -167,7 +208,7 @@ class StockOpnameFragment : BaseFragment() {
                 binding.textLocation1.visibility  = View.VISIBLE
                 binding.buttonStart.isEnabled = true
             }
-            REQUEST_SHELF -> {
+            REQUEST_LOCATION1 -> {
                 clearFrom(2)
                 selectedLocation1 = item
                 binding.textLocation1.text = text
@@ -176,7 +217,7 @@ class StockOpnameFragment : BaseFragment() {
                 binding.labelLocation2.visibility = View.VISIBLE
                 binding.textLocation2.visibility  = View.VISIBLE
             }
-            REQUEST_SHELF_SLOT -> {
+            REQUEST_LOCATION2 -> {
                 clearFrom(3)
                 selectedLocation2 = item
                 binding.textLocation2.text = text
@@ -230,7 +271,6 @@ class StockOpnameFragment : BaseFragment() {
     private fun hideClearIcon(textView: TextView) {
         textView.setCompoundDrawablesRelativeWithIntrinsicBounds(null, null, null, null)
     }
-
 
     private fun clearFrom(level: Int) {
         if (level <= 0) {

@@ -22,6 +22,15 @@ class Select2Adapter(context: Context, items: ArrayList<Select2Item>) :
         filteredItems.addAll(items)
     }
 
+    fun updateData(newItems: ArrayList<Select2Item>) {
+        originalItems.clear()
+        originalItems.addAll(newItems)
+        filteredItems.clear()
+        filteredItems.addAll(newItems)
+        clear()
+        addAll(newItems)
+        notifyDataSetChanged()
+    }
 
     override fun getView(
         position: Int,

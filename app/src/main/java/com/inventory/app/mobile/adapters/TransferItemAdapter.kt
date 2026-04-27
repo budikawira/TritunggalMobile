@@ -12,6 +12,7 @@ class TransferItemAdapter (
     var listener : OnItemClick?
 ) : RecyclerView.Adapter<TransferItemAdapter.TransferItemViewHolder>() {
     var isPlacement : Boolean = false
+    var isShipment : Boolean = false
     // ViewHolder class using View Binding
     class TransferItemViewHolder(val binding: RowTransferBinding) : RecyclerView.ViewHolder(binding.root) {
         // No need to findViewById here, views are accessed via binding object
@@ -33,25 +34,47 @@ class TransferItemAdapter (
 
         // Bind data to the TextViews using binding object
         holder.binding.textNo.text = currentItem.no
-        if (!isPlacement) {
+        if (isPlacement) {
+            holder.binding.textSrc.visibility = View.GONE
+            holder.binding.textSrcLabel.visibility = View.GONE
+            holder.binding.textDestLabel.visibility = View.GONE
+
+
+            var destLoc = ""
+            if (currentItem.destLocationParentNames.isNotEmpty()) {
+                destLoc = currentItem.destLocationParentNames.joinToString(" ➤ ")
+                destLoc += " ➤ " + currentItem.destLocationName
+            }
+            holder.binding.textDest.text = destLoc
+        } else if (isShipment) {
+            holder.binding.textDest.visibility = View.GONE
+            holder.binding.textDestLabel.visibility = View.GONE
+            holder.binding.textSrcLabel.visibility = View.GONE
+
             var srcLoc = ""
             if (currentItem.srcLocationParentNames.isNotEmpty()) {
                 srcLoc = currentItem.srcLocationParentNames.joinToString(" ➤ ")
                 srcLoc += " ➤ " + currentItem.srcLocationName
             }
             holder.binding.textSrc.text = srcLoc
+
         } else {
-            holder.binding.textSrc.visibility = View.GONE
-            holder.binding.textSrcLabel.visibility = View.GONE
-            holder.binding.textDestLabel.visibility = View.GONE
+
+            var srcLoc = ""
+            if (currentItem.srcLocationParentNames.isNotEmpty()) {
+                srcLoc = currentItem.srcLocationParentNames.joinToString(" ➤ ")
+                srcLoc += " ➤ " + currentItem.srcLocationName
+            }
+            holder.binding.textSrc.text = srcLoc
+
+            var destLoc = ""
+            if (currentItem.destLocationParentNames.isNotEmpty()) {
+                destLoc = currentItem.destLocationParentNames.joinToString(" ➤ ")
+                destLoc += " ➤ " + currentItem.destLocationName
+            }
+            holder.binding.textDest.text = destLoc
         }
 
-        var destLoc = ""
-        if (currentItem.destLocationParentNames.isNotEmpty()) {
-            destLoc = currentItem.destLocationParentNames.joinToString(" ➤ ")
-            destLoc += " ➤ " + currentItem.destLocationName
-        }
-        holder.binding.textDest.text = destLoc
 
         // Set click listener for the CardView using binding object
         holder.binding.cardView.setOnClickListener {

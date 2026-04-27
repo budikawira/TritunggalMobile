@@ -15,6 +15,7 @@ import com.inventory.app.mobile.adapters.TransferItemAdapter
 import com.inventory.app.mobile.databinding.FragmentPlacementListBinding
 import com.inventory.app.mobile.databinding.FragmentTransferListBinding
 import com.inventory.app.mobile.models.Transfer
+import com.inventory.app.mobile.utils.Params
 import com.inventory.app.mobile.utils.SessionManager
 import com.inventory.app.mobile.utils.rest.ApiClient
 import com.inventory.app.mobile.utils.rest.ApiInterface
@@ -100,7 +101,12 @@ class PlacementListFragment : BaseFragment() {
         binding.btnMore.setOnClickListener { view ->
             showPopUp(view)
         }
-
+        binding.btnCreate.setOnClickListener {
+            findNavController().navigate(R.id.action_placementListFragment_to_placementCreateFragment)
+        }
+        if (sessionManager.getMenu().contains(Params.MENU_PLACEMENT_CREATE)) {
+            binding.layoutBottom.visibility = View.VISIBLE
+        }
         init()
     }
 

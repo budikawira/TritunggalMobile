@@ -37,6 +37,7 @@
             android:layout_height="56dp"
             style="@style/PrimaryButtonStyle"
             android:text="@string/start_scan"
+            android:enabled="false"
             />
         <Button
             android:id="@+id/buttonUpload"
@@ -95,6 +96,14 @@
             android:text="@string/dash"
             android:layout_alignParentEnd="true"
             android:layout_alignBottom="@id/textLocation"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/textLocation"
+            android:id="@+id/tvAddress"
+            android:textAlignment="center"
+            android:padding="8dp"
+            />
     </RelativeLayout>
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"

@@ -1,18 +1,14 @@
 package com.inventory.app.mobile.utils.rest
 
-import com.inventory.app.mobile.models.Location
-import com.inventory.app.mobile.models.Shelf
-import com.inventory.app.mobile.models.ShelfSlot
-import com.inventory.app.mobile.utils.rest.requests.BaseRequest
 import com.inventory.app.mobile.utils.rest.requests.GetEpcByStickerNoRequest
 import com.inventory.app.mobile.utils.rest.requests.GetItemByEpcRequest
 import com.inventory.app.mobile.utils.rest.requests.GetItemByLocationRequest
-import com.inventory.app.mobile.utils.rest.requests.GetShelfSlotsRequest
-import com.inventory.app.mobile.utils.rest.requests.GetShelvesRequest
+import com.inventory.app.mobile.utils.rest.requests.GetLocationsRequest
+import com.inventory.app.mobile.utils.rest.requests.GetMasterItemRequest
+import com.inventory.app.mobile.utils.rest.requests.PlacementCreateRequest
 import com.inventory.app.mobile.utils.rest.requests.SignInRequest
 import com.inventory.app.mobile.utils.rest.requests.RegisterRfidRequest
 import com.inventory.app.mobile.utils.rest.requests.ShipmentInitRequest
-import com.inventory.app.mobile.utils.rest.requests.ShipmentUploadRequest
 import com.inventory.app.mobile.utils.rest.requests.StockOpnameUploadRequest
 import com.inventory.app.mobile.utils.rest.requests.TransferConfirmRequest
 import com.inventory.app.mobile.utils.rest.requests.TransferInitRequest
@@ -23,14 +19,12 @@ import com.inventory.app.mobile.utils.rest.response.BaseTableResponse
 import com.inventory.app.mobile.utils.rest.response.GetItemByEpcResponse
 import com.inventory.app.mobile.utils.rest.response.GetItemByLocationResponse
 import com.inventory.app.mobile.utils.rest.response.GetLocationsResponse
-import com.inventory.app.mobile.utils.rest.response.GetShelfSlotsResponse
-import com.inventory.app.mobile.utils.rest.response.GetShelvesResponse
+import com.inventory.app.mobile.utils.rest.response.GetMasterItemResponse
 import com.inventory.app.mobile.utils.rest.response.SignInResponse
 import com.inventory.app.mobile.utils.rest.response.ProductResult
 import com.inventory.app.mobile.utils.rest.response.RegisterRfidResponse
 import com.inventory.app.mobile.utils.rest.response.ShipmentInitResponse
 import com.inventory.app.mobile.utils.rest.response.ShipmentListInitResponse
-import com.inventory.app.mobile.utils.rest.response.ShipmentUploadResponse
 import com.inventory.app.mobile.utils.rest.response.StockOpnameUploadResponse
 import com.inventory.app.mobile.utils.rest.response.TransferInitResponse
 import com.inventory.app.mobile.utils.rest.response.TransferListInitResponse
@@ -115,17 +109,44 @@ interface ApiInterface {
     ): Call<BaseResponse?>
 
     @Headers("Accept: application/json")
+    @POST("api/Inv/PlacementCreate")
+    fun placementCreate(
+        @Header("Authorization") jwtToken: String,
+        @Body request: PlacementCreateRequest
+    ): Call<BaseResponse?>
+
+    @Headers("Accept: application/json")
+    @POST("api/Inv/ShipmentCreate")
+    fun shipmentCreate(
+        @Header("Authorization") jwtToken: String,
+        @Body request: PlacementCreateRequest
+    ): Call<BaseResponse?>
+
     @POST("api/Inv/ShipmentInit")
-    fun shipmentInit(@Body request: ShipmentInitRequest): Call<ShipmentInitResponse?>
+    fun shipmentInit(
+        @Header("Authorization") jwtToken: String,
+        @Body request: ShipmentInitRequest
+    ): Call<ShipmentInitResponse?>
 
     @Headers("Accept: application/json")
     @POST("api/Inv/ShipmentListInit")
-    fun shipmentListInit(): Call<ShipmentListInitResponse?>
+    fun shipmentListInit(
+        @Header("Authorization") jwtToken: String
+    ): Call<TransferListInitResponse?>
 
     @Headers("Accept: application/json")
     @POST("api/Inv/ShipmentUpload")
-    fun shipmentUpload(@Body request: ShipmentUploadRequest): Call<ShipmentUploadResponse?>
+    fun shipmentUpload(
+        @Header("Authorization") jwtToken: String,
+        @Body request: TransferUploadRequest
+    ): Call<TransferUploadResponse?>
 
+    @Headers("Accept: application/json")
+    @POST("api/Inv/ShipmentConfirm")
+    fun shipmentConfirm(
+        @Header("Authorization") jwtToken: String,
+        @Body request: TransferConfirmRequest
+    ): Call<BaseResponse?>
     @Headers("Accept: application/json")
     @POST("api/Inv/StockOpnameUpload")
     fun stockOpnameUpload(
@@ -133,19 +154,21 @@ interface ApiInterface {
         @Body request: StockOpnameUploadRequest): Call<StockOpnameUploadResponse?>
 
     @Headers("Accept: application/json")
-    @POST("api/Inv/GetLocations")
-    fun getLocations(): Call<GetLocationsResponse?>
-
-    @Headers("Accept: application/json")
-    @POST("api/Inv/GetShelves")
-    fun getShelves(@Body request: GetShelvesRequest): Call<GetShelvesResponse?>
-
-    @Headers("Accept: application/json")
-    @POST("api/Inv/GetShelfSlots")
-    fun getShelfSlots(@Body request: GetShelfSlotsRequest): Call<GetShelfSlotsResponse?>
+    @POST("api/Loc/GetLocations")
+    fun getLocations(
+        @Header("Authorization") jwtToken: String,
+        @Body request: GetLocationsRequest): Call<GetLocationsResponse?>
 
     @Headers("Accept: application/json")
     @POST("api/Inv/GetItemByLocation")
-    fun getItemByLocation(@Body request: GetItemByLocationRequest): Call<GetItemByLocationResponse?>
+    fun getItemByLocation(
+        @Header("Authorization") jwtToken: String,
+        @Body request: GetItemByLocationRequest): Call<GetItemByLocationResponse?>
+
+    @Headers("Accept: application/json")
+    @POST("api/Inv/GetMasterItem")
+    fun getMasterItem(
+        @Header("Authorization") jwtToken: String,
+        @Body request: GetMasterItemRequest): Call<GetMasterItemResponse?>
 
 }

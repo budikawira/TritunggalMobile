@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
+    android:label="@string/placement"
     app:startDestination="@id/homeFragment">
 
     <fragment
@@ -37,7 +38,7 @@
         android:id="@+id/findFragment"
         android:name="com.inventory.app.mobile.fragments.FindFragment"
         android:label="Find Asset"
-        tools:layout="@layout/fragment_find" >
+        tools:layout="@layout/fragment_find">
         <action
             android:id="@+id/action_findFragment_to_findScanFragment"
             app:destination="@id/findScanFragment" />
@@ -46,7 +47,7 @@
         android:id="@+id/findScanFragment"
         android:name="com.inventory.app.mobile.fragments.FindScanFragment"
         android:label="Find Asset"
-        tools:layout="@layout/fragment_find_scan" >
+        tools:layout="@layout/fragment_find_scan">
         <argument
             android:name="epc"
             app:argType="string" />
@@ -55,7 +56,7 @@
         android:id="@+id/transferListFragment"
         android:name="com.inventory.app.mobile.fragments.TransferListFragment"
         android:label="Transfer"
-        tools:layout="@layout/fragment_transfer_list" >
+        tools:layout="@layout/fragment_transfer_list">
         <action
             android:id="@+id/action_transferListFragment_to_transferFragment"
             app:destination="@id/transferFragment" />
@@ -68,7 +69,7 @@
         android:id="@+id/transferFragment"
         android:name="com.inventory.app.mobile.fragments.TransferFragment"
         android:label="Transfer"
-        tools:layout="@layout/fragment_transfer" >
+        tools:layout="@layout/fragment_transfer">
         <argument
             android:name="id"
             app:argType="long" />
@@ -81,7 +82,7 @@
         android:id="@+id/shipmentListFragment"
         android:name="com.inventory.app.mobile.fragments.ShipmentListFragment"
         android:label="Shipment"
-        tools:layout="@layout/fragment_shipment_list" >
+        tools:layout="@layout/fragment_shipment_list">
         <action
             android:id="@+id/action_shipmentListFragment_to_homeFragment"
             app:destination="@id/homeFragment"
@@ -89,12 +90,15 @@
         <action
             android:id="@+id/action_shipmentListFragment_to_shipmentFragment"
             app:destination="@id/shipmentFragment" />
+        <action
+            android:id="@+id/action_shipmentListFragment_to_shipmentCreateFragment"
+            app:destination="@id/shipmentCreateFragment" />
     </fragment>
     <fragment
         android:id="@+id/shipmentFragment"
         android:name="com.inventory.app.mobile.fragments.ShipmentFragment"
         android:label="Shipment"
-        tools:layout="@layout/fragment_shipment" >
+        tools:layout="@layout/fragment_shipment">
         <action
             android:id="@+id/action_shipmentFragment_to_homeFragment"
             app:destination="@id/homeFragment"
@@ -107,7 +111,7 @@
         android:id="@+id/stockOpnameFragment"
         android:name="com.inventory.app.mobile.fragments.StockOpnameFragment"
         android:label="Stock Opname"
-        tools:layout="@layout/fragment_stock_opname" >
+        tools:layout="@layout/fragment_stock_opname">
         <action
             android:id="@+id/action_stockOpnameFragment_to_stockOpnameScanFragment"
             app:destination="@id/stockOpnameScanFragment" />
@@ -120,20 +124,15 @@
             android:name="locationId"
             android:defaultValue="0L"
             app:argType="long" />
-        <argument
-            android:name="shelfId"
-            android:defaultValue="0L"
-            app:argType="long" />
-        <argument
-            android:name="shelfSlotId"
-            android:defaultValue="0L"
-            app:argType="long" />
         <action
             android:id="@+id/action_stockOpnameScanFragment_to_homeFragment"
             app:destination="@id/homeFragment" />
         <argument
             android:name="name"
             app:argType="string" />
+        <argument
+            android:name="includeSubLocation"
+            app:argType="boolean" />
     </fragment>
     <fragment
         android:id="@+id/placementListFragment"
@@ -144,8 +143,14 @@
             android:id="@+id/action_placementListFragment_to_homeFragment"
             app:destination="@id/homeFragment" />
         <action
+            android:id="@+id/action_placementListFragment_to_placementCreateFragment"
+            app:destination="@id/placementCreateFragment" />
+        <action
             android:id="@+id/action_placementListFragment_to_placementFragment"
             app:destination="@id/placementFragment" />
+        <action
+            android:id="@+id/action_placementListFragment_self"
+            app:destination="@id/placementListFragment" />
     </fragment>
     <fragment
         android:id="@+id/placementFragment"
@@ -158,5 +163,27 @@
         <argument
             android:name="id"
             app:argType="long" />
+    </fragment>
+    <fragment
+        android:id="@+id/placementCreateFragment"
+        android:name="com.inventory.app.mobile.fragments.PlacementCreateFragment"
+        android:label="@string/placement"
+        tools:layout="@layout/fragment_placement_create">
+        <action
+            android:id="@+id/action_placementCreateFragment_to_placementListFragment"
+            app:destination="@id/placementListFragment"
+            app:popUpTo="@id/placementListFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+    <fragment
+        android:id="@+id/shipmentCreateFragment"
+        android:name="com.inventory.app.mobile.fragments.ShipmentCreateFragment"
+        android:label="Shipment"
+        tools:layout="@layout/fragment_shipment_create">
+        <action
+            android:id="@+id/action_shipmentCreateFragment_to_shipmentListFragment"
+            app:destination="@id/shipmentListFragment"
+            app:popUpTo="@id/shipmentListFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 </navigation>

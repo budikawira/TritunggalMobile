@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.inventory.app.mobile.models.Location
 import com.inventory.app.mobile.utils.rest.response.SignInResponse
 
 
@@ -79,30 +78,4 @@ class SessionManager(private var context : Context) {
         return ArrayList()
     }
 
-    fun setLocationUpdate(locationUpdate : String) {
-        editor.putString("locUpdate", locationUpdate)
-        editor.apply()
-    }
-
-    fun getLocationUpdate() : String {
-        return pref.getString("locUpdate", "") ?: ""
-    }
-
-    fun setLocationList(locations : ArrayList<Location>) {
-        var gson = Gson()
-        var json = gson.toJson(locations)
-        editor.putString("locations", json)
-        editor.apply()
-    }
-
-    fun getLocationList() : ArrayList<Location> {
-        var gson = Gson()
-        var json = pref.getString("locations", "")
-        if (json == "") {
-            return ArrayList<Location>()
-        }
-        val type = object : TypeToken<ArrayList<Location>?>() {}.getType()
-        val locationList: ArrayList<Location> = gson.fromJson(json, type) ?: ArrayList<Location>()
-        return locationList
-    }
 }

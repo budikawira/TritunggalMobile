@@ -24,6 +24,7 @@
             style="@style/PrimaryButtonStyle"
             />
         <Button
+            android:id="@+id/btnCreate"
             android:layout_width="match_parent"
             android:layout_height="56dp"
             style="@style/PrimaryButtonStyle"

@@ -1,12 +1,14 @@
 package com.inventory.app.mobile.fragments
 
 import android.annotation.SuppressLint
+import android.bluetooth.BluetoothDevice
 import android.content.DialogInterface
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
+import android.os.SystemClock
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -20,7 +22,14 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.gson.Gson
 import com.inventory.app.mobile.AppCtx
+import com.inventory.app.mobile.FLAG_FAIL
+import com.inventory.app.mobile.FLAG_START
+import com.inventory.app.mobile.FLAG_STOP
+import com.inventory.app.mobile.FLAG_SUCCESS
+import com.inventory.app.mobile.FLAG_UHFINFO
+import com.inventory.app.mobile.FLAG_UHFINFO_LIST
 import com.inventory.app.mobile.R
 import com.inventory.app.mobile.adapters.StockOpnameAdapter
 import com.inventory.app.mobile.databinding.FragmentStockOpnameScanBinding
@@ -30,12 +39,14 @@ import com.inventory.app.mobile.utils.Params
 import com.inventory.app.mobile.utils.SessionManager
 import com.inventory.app.mobile.utils.rest.ApiClient
 import com.inventory.app.mobile.utils.rest.ApiInterface
+import com.inventory.app.mobile.utils.rest.requests.GetItemByEpcRequest
 import com.inventory.app.mobile.utils.rest.requests.GetItemByLocationRequest
 import com.inventory.app.mobile.utils.rest.requests.StockOpnameUploadRequest
 import com.inventory.app.mobile.utils.rest.response.BaseResponse
 import com.inventory.app.mobile.utils.rest.response.GetItemByLocationResponse
 import com.inventory.app.mobile.utils.rest.response.StockOpnameUploadResponse
 import com.rscja.deviceapi.entity.UHFTAGInfo
+import com.rscja.deviceapi.interfaces.ConnectionStatus
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -69,10 +80,37 @@ class StockOpnameScanFragment : BaseFragment(), StockOpnameAdapter.OnItemClick {
     private var mScannedEpc : ArrayList<String> = ArrayList() //processing or processed epc
     private var mProcessingEpc : ArrayList<String> = ArrayList() //just scanned epc
 
-    private val debugEpc = arrayOf("50424D5530323531323525480001FFFF","003","005")
+    private val debugEpc = arrayOf("00000000","32364330303339FF")
     private val debugEpc1 = arrayOf("001","002","004","005")
     private var mStockOpnameId = 0L
 
+    private var postWork = Runnable {
+        while (mIsScanning) {
+            Thread.sleep(300)
+            var epcList = ArrayList<String>()
+            synchronized(lock) {
+//                mProcessingEpc.forEach { epc ->
+//                    if (!mScannedEpc.contains(epc)) {
+//                        epcList.add(epc)
+//                    }
+//                }
+//                mProcessingEpc.clear()
+//                mScannedEpc.addAll(epcList)
+                for (epc in epcList) {
+                    updateScanData(epc)
+                }
+            }
+
+//            if (epcList.isNotEmpty()) {
+//                Log.d(PlacementFragment.Companion.TAG, "------------ getItemByEpc ------------")
+//                Log.d(PlacementFragment.Companion.TAG, "epcList : ${Gson().toJson(epcList)}")
+//                var request = apiInterface.getItemByEpc(
+//                    "Bearer " + sessionManager.getSessionId(),
+//                    GetItemByEpcRequest(epcList))
+//                request.enqueue(itemByEpcListener)
+//            }
+        }
+    }
     private var handler: Handler = object : Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message) {
             if (msg.what == 1) {
@@ -92,43 +130,55 @@ class StockOpnameScanFragment : BaseFragment(), StockOpnameAdapter.OnItemClick {
         }
     }
 
-
     private fun toggleScan() {
         mIsScanning = !mIsScanning
         if (mIsScanning) {
-            if (mainActivity?.mReader != null) {
-                mainActivity?.mReader?.setInventoryCallback { uhftagInfo ->
-                    val msg = handler.obtainMessage()
-                    msg.obj = uhftagInfo
-                    msg.what = 1
-                    handler.sendMessage(msg)
-                    mainActivity?.playSound(1)
-                }
-                if (mainActivity!!.mReader!!.startInventoryTag()) {
-                    handler.sendEmptyMessageDelayed(2, 10)
-
-                    binding.buttonUpload.isEnabled = false
-                    binding.btnMore.isEnabled = false
-                    binding.buttonScan.text = "Stop Scan"
-                    val color = ContextCompat.getColor(appCtx, R.color.accent)
-                    binding.buttonScan.backgroundTintList = ColorStateList.valueOf(color)
-
-                    //}
-                } else {
-                    stopInventory()
-                    mIsScanning = false
-                }
-            } else if (Params.DEBUG) {
-                handler.sendEmptyMessageDelayed(2, 10)
-
-                binding.buttonUpload.isEnabled = false
-                binding.btnMore.isEnabled = false
-                binding.buttonScan.text = "Stop Scan"
-                val color = ContextCompat.getColor(appCtx, R.color.accent)
-                binding.buttonScan.backgroundTintList = ColorStateList.valueOf(color)
-
+            if (!Params.DEBUG) {
+                TagThread().start()
+            } else {
                 simulateScanRfid()
             }
+            binding.buttonUpload.isEnabled = false
+            binding.btnMore.isEnabled = false
+            binding.buttonScan.text = "Stop Scan"
+            val color = ContextCompat.getColor(appCtx, R.color.accent)
+            binding.buttonScan.backgroundTintList = ColorStateList.valueOf(color)
+            val t = Thread(postWork)
+            t.start()
+
+//            if (mainActivity?.mReader != null) {
+//                mainActivity?.mReader?.setInventoryCallback { uhftagInfo ->
+//                    val msg = handler.obtainMessage()
+//                    msg.obj = uhftagInfo
+//                    msg.what = 1
+//                    handler.sendMessage(msg)
+//                    mainActivity?.playSound(1)
+//                }
+//                if (mainActivity!!.mReader!!.startInventoryTag()) {
+//                    handler.sendEmptyMessageDelayed(2, 10)
+//
+//                    binding.buttonUpload.isEnabled = false
+//                    binding.btnMore.isEnabled = false
+//                    binding.buttonScan.text = "Stop Scan"
+//                    val color = ContextCompat.getColor(appCtx, R.color.accent)
+//                    binding.buttonScan.backgroundTintList = ColorStateList.valueOf(color)
+//
+//                    //}
+//                } else {
+//                    stopInventory()
+//                    mIsScanning = false
+//                }
+//            } else if (Params.DEBUG) {
+//                handler.sendEmptyMessageDelayed(2, 10)
+//
+//                binding.buttonUpload.isEnabled = false
+//                binding.btnMore.isEnabled = false
+//                binding.buttonScan.text = "Stop Scan"
+//                val color = ContextCompat.getColor(appCtx, R.color.accent)
+//                binding.buttonScan.backgroundTintList = ColorStateList.valueOf(color)
+//
+//                simulateScanRfid()
+//            }
         } else {
             stopInventory()
             binding.buttonUpload.isEnabled = true
@@ -173,11 +223,17 @@ class StockOpnameScanFragment : BaseFragment(), StockOpnameAdapter.OnItemClick {
 
     private fun stopInventory() {
         mScannedEpc.clear()
-        if (mainActivity?.mReader != null) {
-            mainActivity?.mReader?.stopInventory()
+        mIsScanning = false
+        if (uhf != null) {
+            uhf?.stopInventory()
         } else {
             Toast.makeText(mainActivity, "Stop scaning inventory fail!", Toast.LENGTH_SHORT).show()
         }
+//        if (mainActivity?.mReader != null) {
+//            mainActivity?.mReader?.stopInventory()
+//        } else {
+//            Toast.makeText(mainActivity, "Stop scaning inventory fail!", Toast.LENGTH_SHORT).show()
+//        }
     }
 
     override fun ReaderOnKeyDwon() {
@@ -239,6 +295,21 @@ class StockOpnameScanFragment : BaseFragment(), StockOpnameAdapter.OnItemClick {
             mAdapter.setMode(false)
         }
         init()
+
+        binding.tvAddress.setOnClickListener {
+            if (mIsScanning) {
+                showToast(R.string.title_stop_read_card)
+            } else if (uhf?.connectStatus == ConnectionStatus.CONNECTING) {
+                showToast(R.string.connecting)
+            } else if (uhf?.connectStatus == ConnectionStatus.CONNECTED) {
+                disconnect(true)
+            } else {
+                sessionManager.setDeviceAddress("");
+                search()
+            }
+        }
+        binding.tvAddress.setText(R.string.connecting)
+        initConnect()
     }
 
     private fun uploadData() {
@@ -257,8 +328,6 @@ class StockOpnameScanFragment : BaseFragment(), StockOpnameAdapter.OnItemClick {
         var param = StockOpnameUploadRequest(
             mStockOpnameId,
             args.locationId,
-            args.shelfId,
-            args.shelfSlotId,
             scanned,
             notScanned
         )
@@ -301,10 +370,11 @@ class StockOpnameScanFragment : BaseFragment(), StockOpnameAdapter.OnItemClick {
     private fun init() {
         var param = GetItemByLocationRequest()
         param.locationId = args.locationId
-        param.shelfId = args.shelfId
-        param.shelfSlotId = args.shelfSlotId
+        param.includeSubLocation = args.includeSubLocation
 
-        var request = apiInterface.getItemByLocation(param)
+        var request = apiInterface.getItemByLocation(
+            "Bearer " + sessionManager.getSessionId(),
+            param)
         request.enqueue(object: Callback<GetItemByLocationResponse?> {
             @SuppressLint("NotifyDataSetChanged")
             override fun onResponse(
@@ -440,6 +510,122 @@ class StockOpnameScanFragment : BaseFragment(), StockOpnameAdapter.OnItemClick {
 
         // Show the menu
         popup.show()
+    }
+
+    @Synchronized
+    private fun getUHFInfo(): List<UHFTAGInfo>? {
+
+        //旧主板才需要调用readTagFromBufferList_EpcTidUser 输出 RSSI
+        //return uhf?.readTagFromBufferList_EpcTidUser()
+        return uhf!!.readTagFromBufferList()
+    }
+
+    inner class TagThread : Thread() {
+        override fun run() {
+            val msg: Message = mHandlerTag.obtainMessage(FLAG_START)
+            Log.i(TAG, "startInventoryTag() 1")
+            if (!uhf!!.setPower(radioPower)) {
+                activity?.runOnUiThread { showToast("Set power failed") }
+            }
+            if (!uhf!!.setEPCMode()) {
+                activity?.runOnUiThread { showToast("Set mode failed") }
+            }
+            if (uhf!!.startInventoryTag()) {
+                //mStrTime = System.currentTimeMillis()
+                msg.arg1 = FLAG_SUCCESS
+            } else {
+                msg.arg1 = FLAG_FAIL
+                mIsScanning = false
+            }
+            mHandlerTag.sendMessage(msg)
+            //var startTime = System.currentTimeMillis()
+            while (mIsScanning) {
+                val list: List<UHFTAGInfo>? = getUHFInfo()
+                if (list.isNullOrEmpty()) {
+                    SystemClock.sleep(1)
+                    Log.i(TAG, "No Tag found")
+                } else {
+                    mainActivity?.playSound(1)
+                    mHandlerTag.sendMessage(mHandlerTag.obtainMessage(FLAG_UHFINFO_LIST, list))
+                }
+//                if (System.currentTimeMillis() - startTime > 10) {
+//                    startTime = System.currentTimeMillis()
+//                    mHandlerTag.sendEmptyMessage(FLAG_UPDATE_TIME)
+//                }
+//                //-------------------------
+//                if (System.currentTimeMillis() - mStrTime >= maxRunTime) {
+//                    isScanning = false
+//                    break
+//                }
+                //--------------------------------
+            }
+            stopInventory()
+        }
+    }
+
+    override fun onConnectionStateChange(connectionStatus: ConnectionStatus, device: BluetoothDevice?) {
+        if (connectionStatus == ConnectionStatus.CONNECTED) {
+            var address = remoteBTName
+            if (address.isNotEmpty()) address += "\n"
+            address += remoteBTAdd
+            binding.tvAddress.text = address
+            binding.buttonScan.isEnabled = true
+        } else if (connectionStatus == ConnectionStatus.DISCONNECTED) {
+            binding.buttonScan.isEnabled = false
+            binding.tvAddress.text = if (device != null) {
+                String.format("%s - %s\ndisconnected", remoteBTName, remoteBTAdd)
+            } else {
+                "disconnected"
+            }
+        }
+    }
+
+    val mHandlerTag = object : Handler(Looper.getMainLooper()) {
+        override fun handleMessage(msg: Message) {
+            when (msg.what) {
+                FLAG_STOP -> if (msg.arg1 == FLAG_SUCCESS) {
+                    //停止成功
+                    binding.buttonScan.setText(R.string.start_scan)
+//                    btClear.setEnabled(true)
+//                    btStop.setEnabled(false)
+//                    InventoryLoop.setEnabled(true)
+//                    btInventory.setEnabled(true)
+//                    btInventoryPerMinute.setEnabled(true)
+                } else {
+                    //停止失败
+                    mainActivity?.playSound(2)
+                    Toast.makeText(
+                        requireActivity(),
+                        "Gagal stop scan!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+
+                FLAG_UHFINFO_LIST -> {
+                    val list = msg.obj as ArrayList<UHFTAGInfo>
+                    //addEPCToList(list)
+                    list.forEach { tag ->
+                        updateScanData(tag.epc)
+                    }
+                }
+
+                FLAG_START -> if (msg.arg1 == FLAG_SUCCESS) {
+                    //开始读取标签成功
+                    binding.buttonScan.setText(R.string.stop_scan)
+                } else {
+                    //开始读取标签失败
+                    mainActivity?.playSound(2)
+                }
+
+                FLAG_UHFINFO -> {
+                    val info = msg.obj as UHFTAGInfo
+                    val list1 = java.util.ArrayList<UHFTAGInfo>()
+                    list1.add(info)
+                    updateScanData(info.epc)
+                    //addEPCToList(list1)
+                }
+            }
+        }
     }
 }
 
