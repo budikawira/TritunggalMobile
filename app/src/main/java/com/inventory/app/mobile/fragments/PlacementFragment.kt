@@ -315,8 +315,13 @@ class PlacementFragment : BaseFragment(), SimpleItemAdapter.OnItemClick {
                 search()
             }
         }
-        binding.tvAddress.setText(R.string.connecting)
-        initConnect()
+        if (!Params.DEBUG) {
+            binding.tvAddress.setText(R.string.connecting)
+            initConnect()
+        } else {
+            binding.tvAddress.setText(R.string.connect_success)
+            binding.buttonScan.isEnabled = true
+        }
     }
 
     override fun onPowerUpdated() {
@@ -569,8 +574,8 @@ class PlacementFragment : BaseFragment(), SimpleItemAdapter.OnItemClick {
     private fun getUHFInfo(): List<UHFTAGInfo>? {
 
         //旧主板才需要调用readTagFromBufferList_EpcTidUser 输出 RSSI
-        //return uhf?.readTagFromBufferList_EpcTidUser()
-        return uhf!!.readTagFromBufferList()
+        return uhf?.readTagFromBufferList_EpcTidUser()
+        //return uhf!!.readTagFromBufferList()
     }
 
     override fun isScanning(): Boolean = mIsScanning

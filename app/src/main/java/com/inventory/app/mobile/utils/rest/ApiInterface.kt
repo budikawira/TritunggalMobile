@@ -1,10 +1,13 @@
 package com.inventory.app.mobile.utils.rest
 
+import com.inventory.app.mobile.models.Select2Item
 import com.inventory.app.mobile.utils.rest.requests.GetEpcByStickerNoRequest
 import com.inventory.app.mobile.utils.rest.requests.GetItemByEpcRequest
 import com.inventory.app.mobile.utils.rest.requests.GetItemByLocationRequest
 import com.inventory.app.mobile.utils.rest.requests.GetLocationsRequest
 import com.inventory.app.mobile.utils.rest.requests.GetMasterItemRequest
+import com.inventory.app.mobile.utils.rest.requests.GetUnitByMasterItemIdRequest
+import com.inventory.app.mobile.utils.rest.requests.RegisterItemRequest
 import com.inventory.app.mobile.utils.rest.requests.PlacementCreateRequest
 import com.inventory.app.mobile.utils.rest.requests.SignInRequest
 import com.inventory.app.mobile.utils.rest.requests.RegisterRfidRequest
@@ -171,4 +174,16 @@ interface ApiInterface {
         @Header("Authorization") jwtToken: String,
         @Body request: GetMasterItemRequest): Call<GetMasterItemResponse?>
 
+    @Headers("Accept: application/json")
+    @POST("api/Inv/RegisterItem")
+    fun registerItem(
+        @Header("Authorization") jwtToken: String,
+        @Body request: RegisterItemRequest): Call<BaseResponse?>
+
+    @Headers("Accept: application/json")
+    @POST("api/Master/GetUnitByMasterItemId")
+    fun getUnitByMasterItemId(
+        @Header("Authorization") jwtToken: String,
+        @Body request: GetUnitByMasterItemIdRequest
+    ): Call<BaseObjectResponse<List<Select2Item>>?>
 }

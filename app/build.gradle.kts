@@ -15,8 +15,8 @@ android {
         applicationId = "com.inventory.app.mobile"
         minSdk = 24
         targetSdk = 35
-        versionCode = 10108
-        versionName = "1.2.1"
+        versionCode = 10203
+        versionName = "1.2.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

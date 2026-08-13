@@ -49,10 +49,10 @@ class LoginActivity : AppCompatActivity() {
         actionBar?.hide()
         sessionManager = SessionManager(this)
 
-//        if (DEBUG) {
-            bindingContent.etUsername.setText("dewi")
-            bindingContent.etPassword.setText("dewi")
-//        }
+        if (DEBUG) {
+            bindingContent.etUsername.setText("admin")
+            bindingContent.etPassword.setText("Admin")
+        }
 
         bindingContent.btnLogin.setOnClickListener {
             bindingProgress.progress.visibility = View.VISIBLE

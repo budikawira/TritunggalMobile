@@ -430,6 +430,7 @@ class ShipmentFragment : BaseFragment(), SimpleItemAdapter.OnItemClick {
     override fun isScanning(): Boolean = mIsScanning
 
     override fun onConnectionStateChange(connectionStatus: ConnectionStatus, device: BluetoothDevice?) {
+        if (_binding == null) return
         if (connectionStatus == ConnectionStatus.CONNECTED) {
             var address = remoteBTName
             if (address.isNotEmpty()) address += "\n"
@@ -448,7 +449,8 @@ class ShipmentFragment : BaseFragment(), SimpleItemAdapter.OnItemClick {
 
     @Synchronized
     private fun getUHFInfo(): List<UHFTAGInfo>? {
-        return uhf!!.readTagFromBufferList()
+        return uhf?.readTagFromBufferList_EpcTidUser()
+        //return uhf!!.readTagFromBufferList()
     }
 
     inner class TagThread : Thread() {

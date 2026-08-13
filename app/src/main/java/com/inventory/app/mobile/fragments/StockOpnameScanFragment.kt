@@ -516,8 +516,8 @@ class StockOpnameScanFragment : BaseFragment(), StockOpnameAdapter.OnItemClick {
     private fun getUHFInfo(): List<UHFTAGInfo>? {
 
         //旧主板才需要调用readTagFromBufferList_EpcTidUser 输出 RSSI
-        //return uhf?.readTagFromBufferList_EpcTidUser()
-        return uhf!!.readTagFromBufferList()
+        return uhf?.readTagFromBufferList_EpcTidUser()
+        //return uhf!!.readTagFromBufferList()
     }
 
     inner class TagThread : Thread() {

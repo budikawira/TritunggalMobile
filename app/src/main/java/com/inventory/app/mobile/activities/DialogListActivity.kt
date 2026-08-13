@@ -19,8 +19,10 @@ import com.inventory.app.mobile.utils.SessionManager
 import com.inventory.app.mobile.utils.rest.ApiClient
 import com.inventory.app.mobile.utils.rest.ApiInterface
 import com.inventory.app.mobile.utils.rest.requests.GetLocationsRequest
+import com.inventory.app.mobile.utils.rest.requests.GetMasterItemRequest
 import com.inventory.app.mobile.utils.rest.response.BaseResponse
 import com.inventory.app.mobile.utils.rest.response.GetLocationsResponse
+import com.inventory.app.mobile.utils.rest.response.GetMasterItemResponse
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -31,6 +33,9 @@ class DialogListActivity : AppCompatActivity(), DialogItemAdapter.OnItemClick {
         const val EXTRA_TITLE = "extra_title"
         const val EXTRA_LEVEL = "extra_level"
         const val EXTRA_PARENT_ID = "extra_parent_id"
+        const val EXTRA_MODE = "extra_mode"
+        const val MODE_LOCATION = 0
+        const val MODE_MASTER_ITEM = 1
         const val RESULT_ITEM_ID = "result_item_id"
         const val RESULT_ITEM_TEXT = "result_item_text"
     }
@@ -42,6 +47,7 @@ class DialogListActivity : AppCompatActivity(), DialogItemAdapter.OnItemClick {
 
     private var level: Int = 0
     private var parentId: Long = 0
+    private var mode: Int = MODE_LOCATION
     private var currentCall: Call<GetLocationsResponse?>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,6 +58,7 @@ class DialogListActivity : AppCompatActivity(), DialogItemAdapter.OnItemClick {
 
         level = intent.getIntExtra(EXTRA_LEVEL, 0)
         parentId = intent.getLongExtra(EXTRA_PARENT_ID, 0L)
+        mode = intent.getIntExtra(EXTRA_MODE, MODE_LOCATION)
 
         val title = intent.getStringExtra(EXTRA_TITLE) ?: "Select"
         setTitle(title)
@@ -80,33 +87,61 @@ class DialogListActivity : AppCompatActivity(), DialogItemAdapter.OnItemClick {
     private fun loadData(search: String) {
         showLoading(true)
         currentCall?.cancel()
-        currentCall = apiInterface.getLocations(
-            "Bearer " + sessionManager.getSessionId(),
-            GetLocationsRequest(level = level, parentId = parentId, search = search)
-        )
-        currentCall!!.enqueue(object : Callback<GetLocationsResponse?> {
-            override fun onResponse(call: Call<GetLocationsResponse?>, response: Response<GetLocationsResponse?>) {
-                if (call.isCanceled) return
-                showLoading(false)
-                val body = response.body()
-                if (body != null && body.result == BaseResponse.RESULT_OK) {
-                    val list = ArrayList<Select2Item>()
-                    body.data?.forEach { dt -> list.add(dt) }
-                    adapter.data = list
-                    adapter.notifyDataSetChanged()
-                    binding.textEmpty.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
-                } else {
-                    Toast.makeText(this@DialogListActivity,
-                        body?.message ?: "Failed to load data.", Toast.LENGTH_SHORT).show()
+        if (mode == MODE_MASTER_ITEM) {
+            val call = apiInterface.getMasterItem(
+                "Bearer " + sessionManager.getSessionId(),
+                GetMasterItemRequest(name = search)
+            )
+            call.enqueue(object : Callback<GetMasterItemResponse?> {
+                override fun onResponse(call: Call<GetMasterItemResponse?>, response: Response<GetMasterItemResponse?>) {
+                    showLoading(false)
+                    val body = response.body()
+                    if (body != null && body.result == BaseResponse.RESULT_OK) {
+                        val list = ArrayList<Select2Item>()
+                        body.data?.forEach { dt -> list.add(dt) }
+                        adapter.data = list
+                        adapter.notifyDataSetChanged()
+                        binding.textEmpty.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
+                    } else {
+                        Toast.makeText(this@DialogListActivity,
+                            body?.message ?: "Failed to load data.", Toast.LENGTH_SHORT).show()
+                    }
                 }
-            }
-            override fun onFailure(call: Call<GetLocationsResponse?>, t: Throwable) {
-                if (call.isCanceled) return
-                showLoading(false)
-                Toast.makeText(this@DialogListActivity,
-                    "Connection error: ${t.message}", Toast.LENGTH_SHORT).show()
-            }
-        })
+                override fun onFailure(call: Call<GetMasterItemResponse?>, t: Throwable) {
+                    showLoading(false)
+                    Toast.makeText(this@DialogListActivity,
+                        "Connection error: ${t.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
+        } else {
+            currentCall = apiInterface.getLocations(
+                "Bearer " + sessionManager.getSessionId(),
+                GetLocationsRequest(level = level, parentId = parentId, search = search)
+            )
+            currentCall!!.enqueue(object : Callback<GetLocationsResponse?> {
+                override fun onResponse(call: Call<GetLocationsResponse?>, response: Response<GetLocationsResponse?>) {
+                    if (call.isCanceled) return
+                    showLoading(false)
+                    val body = response.body()
+                    if (body != null && body.result == BaseResponse.RESULT_OK) {
+                        val list = ArrayList<Select2Item>()
+                        body.data?.forEach { dt -> list.add(dt) }
+                        adapter.data = list
+                        adapter.notifyDataSetChanged()
+                        binding.textEmpty.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
+                    } else {
+                        Toast.makeText(this@DialogListActivity,
+                            body?.message ?: "Failed to load data.", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                override fun onFailure(call: Call<GetLocationsResponse?>, t: Throwable) {
+                    if (call.isCanceled) return
+                    showLoading(false)
+                    Toast.makeText(this@DialogListActivity,
+                        "Connection error: ${t.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
+        }
     }
 
     override fun onClick(item: Select2Item) {

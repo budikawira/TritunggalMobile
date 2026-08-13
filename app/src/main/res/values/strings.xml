@@ -78,6 +78,13 @@
     <string name="location_level_3">Shelf</string>
     <string name="location_level_4">Shelf Slot</string>
     <string name="select_location">Select Location</string>
+    <string name="master_item">Master Item</string>
+    <string name="select_master_item">Select Master Item</string>
     <string name="include_sublocation">Include Sub Location</string>
 
+    <string name="search_master_item">Search Master Item</string>
+    <string name="sku">PN</string>
+    <string name="product_name">Product Name</string>
+    <string name="count">Item Count</string>
+    <string name="quantity_per_item">Quantity per Item</string>
 </resources>

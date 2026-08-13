@@ -290,9 +290,11 @@ class PairingFragment : BaseFragment() {
         }
 
         if (!Params.DEBUG) {
+            binding.btnScan.isEnabled = false
+            binding.tvAddress.setText(R.string.connecting)
             initConnect()
         } else {
-            binding.tvAddress.visibility = View.GONE
+            binding.tvAddress.setText(R.string.connect_success)
             binding.btnScan.isEnabled = true
         }
     }
@@ -538,8 +540,8 @@ class PairingFragment : BaseFragment() {
     private fun getUHFInfo(): List<UHFTAGInfo>? {
 
         //旧主板才需要调用readTagFromBufferList_EpcTidUser 输出 RSSI
-        //return uhf?.readTagFromBufferList_EpcTidUser()
-        return uhf!!.readTagFromBufferList()
+        return uhf?.readTagFromBufferList_EpcTidUser()
+        //return uhf!!.readTagFromBufferList()
     }
 
     inner class TagThread : Thread() {
@@ -547,10 +549,10 @@ class PairingFragment : BaseFragment() {
             val msg: Message = mHandlerTag.obtainMessage(FLAG_START)
             Log.i(TAG, "startInventoryTag() 1")
             if (!uhf!!.setPower(radioPower)) {
-                showToast("Set power failed")
+                activity?.runOnUiThread { showToast("Set power failed") }
             }
             if (!uhf!!.setEPCMode()) {
-                showToast("Set mode failed")
+                activity?.runOnUiThread {  showToast("Set mode failed") }
             }
             if (uhf!!.startInventoryTag()) {
                 //mStrTime = System.currentTimeMillis()

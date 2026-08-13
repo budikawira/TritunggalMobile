@@ -36,9 +36,14 @@ class HomeFragment : BaseFragment() {
         binding.cardPairing.setOnClickListener{
             findNavController().navigate(R.id.action_homeFragment_to_pairingFragment)
         }
+        binding.cardRegister.setOnClickListener{
+            findNavController().navigate(R.id.action_homeFragment_to_registerItemFragment)
+        }
         if (!menu.contains(Params.MENU_PAIRING)) {
             binding.cardPairing.visibility = View.GONE
+            binding.cardRegister.visibility = View.GONE
         }
+
 
         binding.cardFind.setOnClickListener {
             findNavController().navigate(R.id.action_homeFragment_to_findFragment)
@@ -48,7 +53,7 @@ class HomeFragment : BaseFragment() {
         }
 
         binding.cardPlacement.setOnClickListener {
-            //findNavController().navigate(R.id.action_homeFragment_to_transferListFragment)
+            findNavController().navigate(R.id.action_homeFragment_to_placementListFragment)
         }
         if (!menu.contains(Params.MENU_PLACEMENT)) {
             binding.cardPlacement.visibility = View.GONE
@@ -78,8 +83,5 @@ class HomeFragment : BaseFragment() {
             binding.cardStockOpname.visibility = View.GONE
         }
 
-        binding.cardPlacement.setOnClickListener {
-            findNavController().navigate(R.id.action_homeFragment_to_placementListFragment)
-        }
     }
 }
