@@ -1,0 +1,18 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Stacked/overlapping squares = a group of items (Item.Type = TYPE_GROUP) -->
+    <path
+        android:fillColor="@color/colorTypeGroup"
+        android:fillAlpha="0.55"
+        android:pathData="M3,10L11,10L11,18L3,18Z" />
+    <path
+        android:fillColor="@color/colorTypeGroup"
+        android:fillAlpha="0.8"
+        android:pathData="M9,6L17,6L17,14L9,14Z" />
+    <path
+        android:fillColor="@color/colorTypeGroup"
+        android:pathData="M13,10L21,10L21,18L13,18Z" />
+</vector>

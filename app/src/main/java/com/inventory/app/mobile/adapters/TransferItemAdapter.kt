@@ -39,12 +39,13 @@ class TransferItemAdapter (
             holder.binding.textSrcLabel.visibility = View.GONE
             holder.binding.textDestLabel.visibility = View.GONE
 
-
             var destLoc = ""
             if (currentItem.destLocationParentNames.isNotEmpty()) {
                 destLoc = currentItem.destLocationParentNames.joinToString(" ➤ ")
-                destLoc += " ➤ " + currentItem.destLocationName
+                destLoc += " ➤ "
             }
+            destLoc += currentItem.destLocationName
+
             holder.binding.textDest.text = destLoc
         } else if (isShipment) {
             holder.binding.textDest.visibility = View.GONE
@@ -54,8 +55,9 @@ class TransferItemAdapter (
             var srcLoc = ""
             if (currentItem.srcLocationParentNames.isNotEmpty()) {
                 srcLoc = currentItem.srcLocationParentNames.joinToString(" ➤ ")
-                srcLoc += " ➤ " + currentItem.srcLocationName
+                srcLoc += " ➤ "
             }
+            srcLoc += currentItem.srcLocationName
             holder.binding.textSrc.text = srcLoc
 
         } else {
@@ -63,15 +65,17 @@ class TransferItemAdapter (
             var srcLoc = ""
             if (currentItem.srcLocationParentNames.isNotEmpty()) {
                 srcLoc = currentItem.srcLocationParentNames.joinToString(" ➤ ")
-                srcLoc += " ➤ " + currentItem.srcLocationName
+                srcLoc += " ➤ "
             }
+            srcLoc += currentItem.srcLocationName
             holder.binding.textSrc.text = srcLoc
 
             var destLoc = ""
             if (currentItem.destLocationParentNames.isNotEmpty()) {
                 destLoc = currentItem.destLocationParentNames.joinToString(" ➤ ")
-                destLoc += " ➤ " + currentItem.destLocationName
+                destLoc += " ➤ "
             }
+            destLoc += currentItem.destLocationName
             holder.binding.textDest.text = destLoc
         }
 

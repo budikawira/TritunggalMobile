@@ -80,6 +80,12 @@ open class BaseFragment : Fragment(), ConnectionStatusCallback<Any> {
     protected var mIsScanning: Boolean = false
     protected val connectStatusList: ArrayList<IConnectStatus> = ArrayList()
 
+    // Set by a subclass right before navigating to a "peek" child destination it expects to
+    // return from (e.g. ChildItemsFragment) to keep the RFID/BT connection alive across the
+    // round trip instead of disconnecting on view teardown. Self-resets after each use, so
+    // every other navigation away from a BaseFragment screen disconnects as before.
+    protected var preserveConnectionOnDestroy = false
+
     interface IConnectStatus {
         fun getStatus(connectionStatus: ConnectionStatus?)
     }
@@ -119,6 +125,10 @@ open class BaseFragment : Fragment(), ConnectionStatusCallback<Any> {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         onPowerUpdated()
+
+        // Re-attach the callback: onDestroyView nulls it out, but onCreate (where it's
+        // otherwise set) only runs once per Fragment instance, not on every view rebuild.
+        connectionStatusCallback = this
 
         uhf?.setKeyEventCallback(object : KeyEventCallback {
             override fun onKeyDown(p0: Int) {
@@ -453,21 +463,24 @@ open class BaseFragment : Fragment(), ConnectionStatusCallback<Any> {
             Log.e("BaseFragment", "Error stopping scanning", e)
         }
 
-        // Cancel disconnect timer tasks
-        try {
-            cancelDisconnectTimer()
-        } catch (e: Exception) {
-            Log.e("BaseFragment", "Error cancelling disconnect timer", e)
-        }
-
-        // Disconnect UHF if connected
-        try {
-            if (uhf != null && uhf?.connectStatus == ConnectionStatus.CONNECTED) {
-                disconnect(true)
+        if (!preserveConnectionOnDestroy) {
+            // Cancel disconnect timer tasks
+            try {
+                cancelDisconnectTimer()
+            } catch (e: Exception) {
+                Log.e("BaseFragment", "Error cancelling disconnect timer", e)
             }
-        } catch (e: Exception) {
-            Log.e("BaseFragment", "Error while disconnecting UHF", e)
+
+            // Disconnect UHF if connected
+            try {
+                if (uhf != null && uhf?.connectStatus == ConnectionStatus.CONNECTED) {
+                    disconnect(true)
+                }
+            } catch (e: Exception) {
+                Log.e("BaseFragment", "Error while disconnecting UHF", e)
+            }
         }
+        preserveConnectionOnDestroy = false
 
         // Allow child fragments to clean up their own UHF-related resources
         onDestroyUHF()

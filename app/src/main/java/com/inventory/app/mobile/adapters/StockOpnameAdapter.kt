@@ -44,6 +44,11 @@ class StockOpnameAdapter (
         holder.binding.textName.text = currentItem.name
         holder.binding.textEpc.text = currentItem.epc ?: ""
 
+        // Show the item's Type (Item / Group / BOM) as an icon
+        holder.binding.imgType.setImageResource(currentItem.typeIconRes())
+        holder.binding.imgType.contentDescription =
+            holder.itemView.context.getString(currentItem.typeLabelRes())
+
         // Set click listener for the CardView using binding object
         holder.binding.cardView.setOnClickListener { view ->
             listener?.onClick(position, view, currentItem)
@@ -102,6 +107,7 @@ class StockOpnameAdapter (
             item.name = dt.name
             item.no = dt.no
             item.epc = dt.epc
+            item.type = dt.type
             item.isScanned = false
             this.data.add(item)
             this.filteredData.add(item)

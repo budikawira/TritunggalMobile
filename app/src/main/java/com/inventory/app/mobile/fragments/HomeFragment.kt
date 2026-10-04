@@ -65,6 +65,9 @@ class HomeFragment : BaseFragment() {
         if (!menu.contains(Params.MENU_TRANSFER)) {
             binding.cardTransfer.visibility = View.GONE
         }
+        binding.cardTransferIn.setOnClickListener {
+            findNavController().navigate(R.id.action_homeFragment_to_transferInListFragment)
+        }
         if (!menu.contains(Params.MENU_TRANSFER_CONFIRM_IN)) {
             binding.cardTransferIn.visibility = View.GONE
         }

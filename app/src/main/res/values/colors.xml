@@ -11,4 +11,9 @@
     <color name="blue">#0000FF</color>
     <color name="colorDanger">#f19595</color>
     <color name="colorOk">#95f195</color>
+
+    <!-- Item.Type icon colors (see SimpleItem.TYPE_*) -->
+    <color name="colorTypeItem">#07B9AE</color>
+    <color name="colorTypeGroup">#F2A93C</color>
+    <color name="colorTypeBom">#7E57C2</color>
 </resources>

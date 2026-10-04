@@ -2,6 +2,7 @@
 <androidx.appcompat.widget.LinearLayoutCompat
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -39,35 +40,87 @@
                 app:layout_constraintStart_toStartOf="parent"
                 />
 
+            <CheckBox
+                android:id="@+id/checkboxSelect"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                tools:visibility="visible" />
+
             <TextView
                 android:id="@+id/textSku"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
                 android:textSize="16sp"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/textNo"
+                app:layout_constraintBottom_toBottomOf="@id/textNo"
+                app:layout_constraintEnd_toStartOf="@id/checkboxSelect"
                 android:text="AAAA" />
 
+            <ImageView
+                android:id="@+id/imgType"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:contentDescription="@string/item_type"
+                app:layout_constraintTop_toTopOf="@id/textNo"
+                app:layout_constraintBottom_toBottomOf="@id/textNo"
+                app:layout_constraintEnd_toStartOf="@id/textSku"
+                android:layout_marginEnd="6dp"
+                android:src="@drawable/ic_item_type_item" />
             <TextView
                 android:id="@+id/textName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
                 android:textSize="16sp"
                 app:layout_constraintTop_toBottomOf="@id/textNo"
                 app:layout_constraintStart_toStartOf="parent"
                 android:text="Item name" />
-
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:id="@+id/textSerialNo"
+                android:text="11223344"
+                app:layout_constraintTop_toBottomOf="@id/textName"
+                app:layout_constraintStart_toStartOf="parent"
+                />
             <TextView
                 android:id="@+id/textEpc"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:textSize="16sp"
-                app:layout_constraintTop_toBottomOf="@id/textName"
+                app:layout_constraintTop_toBottomOf="@id/textSerialNo"
                 app:layout_constraintStart_toStartOf="parent"
-                android:text="11223344" />
+                android:text="E0000000000000001" />
+
+
+            <TextView
+                android:id="@+id/textParentItemNo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:textColor="@color/bg_secondary"
+                app:layout_constraintTop_toTopOf="@id/textEpc"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:text=""
+                />
+            <ImageView
+                android:id="@+id/imgChildBadge"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginEnd="4dp"
+                android:contentDescription="@string/child_item_badge_desc"
+                android:src="@drawable/ic_child_badge"
+                android:visibility="gone"
+                app:layout_constraintTop_toTopOf="@id/textParentItemNo"
+                app:layout_constraintBottom_toBottomOf="@id/textParentItemNo"
+                app:layout_constraintEnd_toStartOf="@id/textParentItemNo"
+                tools:visibility="visible" />
+
             <TextView
                 android:id="@+id/textStatus"
                 android:layout_width="wrap_content"

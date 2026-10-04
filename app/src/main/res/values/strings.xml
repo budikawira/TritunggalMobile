@@ -87,4 +87,46 @@
     <string name="product_name">Product Name</string>
     <string name="count">Item Count</string>
     <string name="quantity_per_item">Quantity per Item</string>
+
+    <string name="item_type">Item Type</string>
+    <string name="type_item">Item</string>
+    <string name="type_group">Group</string>
+    <string name="type_bom">Bill of Materials</string>
+
+    <string name="remove_item">Remove</string>
+    <string name="view_child_items">View Child Items</string>
+    <string name="remove_item_confirm_title">Remove Item</string>
+    <string name="remove_item_confirm_message">Remove this item from the list? You can scan it again afterwards.</string>
+    <string name="child_items">Child Items</string>
+    <string name="no_child_items">No child items found.</string>
+    <string name="select_action">-- Select an action --</string>
+    <string name="process_item_group">Process the Item Group</string>
+    <string name="child_item_ungroup">Child Item (Ungroup)</string>
+    <string name="ungroup_result">%1$s ungrouped into %2$d item(s)</string>
+
+    <!-- Placement scan-result tabs -->
+    <string name="tab_ready_to_upload">Ready to Upload</string>
+    <string name="tab_needs_review">Needs Review</string>
+    <string name="resolve_group_item_title">Resolve Group Item: %1$s</string>
+    <string name="resolve_child_item_title">Resolve Child Item: %1$s</string>
+    <string name="action_add_whole_group">Add Whole Group</string>
+    <string name="action_select_child_items">Select Child Items (Ungroup)</string>
+    <string name="action_ungroup_from_parent">Ungroup from Parent</string>
+    <string name="child_item_badge_desc">Child Item</string>
+    <string name="upload_blocked_needs_review">Resolve all items in \"Needs Review\" before uploading.</string>
+    <string name="no_items_in_tab">No items.</string>
+    <string name="failed_load_group_items">Failed to load group items! Please try again.</string>
+
+    <!-- Transfer Out: source-location mismatch -->
+    <string name="resolve_mismatch_item_title">Wrong Location: %1$s</string>
+    <string name="action_refresh_location">Refresh Location</string>
+    <string name="wrong_location_status">Wrong location: currently at %1$s</string>
+    <string name="wrong_location_status_unknown">Wrong location</string>
+    <string name="failed_refresh_location">Failed to refresh item location! Please try again.</string>
+
+    <!-- Transfer In: receiving/scan-checklist tabs -->
+    <string name="tab_not_scanned">Not Scanned</string>
+    <string name="tab_scanned">Scanned</string>
+    <string name="action_mark_scanned">Mark as Scanned</string>
+    <string name="not_expected_status">Not part of this transfer</string>
 </resources>

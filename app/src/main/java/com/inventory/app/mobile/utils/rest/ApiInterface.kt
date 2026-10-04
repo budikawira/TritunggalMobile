@@ -3,6 +3,7 @@ package com.inventory.app.mobile.utils.rest
 import com.inventory.app.mobile.models.Select2Item
 import com.inventory.app.mobile.utils.rest.requests.GetEpcByStickerNoRequest
 import com.inventory.app.mobile.utils.rest.requests.GetItemByEpcRequest
+import com.inventory.app.mobile.utils.rest.requests.GetItemByGroupRequest
 import com.inventory.app.mobile.utils.rest.requests.GetItemByLocationRequest
 import com.inventory.app.mobile.utils.rest.requests.GetLocationsRequest
 import com.inventory.app.mobile.utils.rest.requests.GetMasterItemRequest
@@ -20,6 +21,7 @@ import com.inventory.app.mobile.utils.rest.response.BaseObjectResponse
 import com.inventory.app.mobile.utils.rest.response.BaseResponse
 import com.inventory.app.mobile.utils.rest.response.BaseTableResponse
 import com.inventory.app.mobile.utils.rest.response.GetItemByEpcResponse
+import com.inventory.app.mobile.utils.rest.response.GetItemByGroupResponse
 import com.inventory.app.mobile.utils.rest.response.GetItemByLocationResponse
 import com.inventory.app.mobile.utils.rest.response.GetLocationsResponse
 import com.inventory.app.mobile.utils.rest.response.GetMasterItemResponse
@@ -63,8 +65,19 @@ interface ApiInterface {
     fun getEpcByStickerNo(@Body request: GetEpcByStickerNoRequest): Call<BaseObjectResponse<String>?>
 
     @Headers("Accept: application/json")
+    @POST("api/Inv/GetItemByGroup")
+    fun getItemByGroup(
+        @Header("Authorization") jwtToken: String,
+        @Body request: GetItemByGroupRequest): Call<GetItemByGroupResponse?>
+
+    @Headers("Accept: application/json")
     @POST("api/Inv/TransferListInit")
     fun transferListInit(
+        @Header("Authorization") jwtToken: String): Call<TransferListInitResponse?>
+
+    @Headers("Accept: application/json")
+    @POST("api/Inv/TransferInListInit")
+    fun transferInListInit(
         @Header("Authorization") jwtToken: String): Call<TransferListInitResponse?>
 
     @Headers("Accept: application/json")
@@ -82,6 +95,13 @@ interface ApiInterface {
     @Headers("Accept: application/json")
     @POST("api/Inv/TransferConfirmOut")
     fun transferConfirmOut(
+        @Header("Authorization") jwtToken: String,
+        @Body request: TransferConfirmRequest
+    ): Call<BaseResponse?>
+
+    @Headers("Accept: application/json")
+    @POST("api/Inv/TransferConfirmIn")
+    fun transferConfirmIn(
         @Header("Authorization") jwtToken: String,
         @Body request: TransferConfirmRequest
     ): Call<BaseResponse?>

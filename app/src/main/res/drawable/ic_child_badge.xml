@@ -1,0 +1,10 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Corner-down-right arrow = this item belongs to (is a child of) a parent item -->
+    <path
+        android:fillColor="@color/colorTypeGroup"
+        android:pathData="M7,3L9,3L9,13C9,14.1 9.9,15 11,15L17,15L17,12L21,16L17,20L17,17L11,17C8.79,17 7,15.21 7,13Z" />
+</vector>

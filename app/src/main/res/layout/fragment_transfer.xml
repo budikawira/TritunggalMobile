@@ -106,20 +106,29 @@
             android:text="@string/dash"
             android:layout_toEndOf="@id/textSeparator"
             android:layout_alignBottom="@id/textSrc"/>
-        <TextView
-            android:id="@+id/textCount"
-            android:textStyle="bold"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/dash"
-            android:layout_alignParentEnd="true"
-            android:layout_alignBottom="@id/textSrc"/>
     </RelativeLayout>
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:tabMode="fixed"
+        app:tabGravity="fill"
+        app:layout_constraintTop_toBottomOf="@id/layoutTop" />
+    <TextView
+        android:id="@+id/textEmpty"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/no_items_in_tab"
+        android:textAlignment="center"
+        android:padding="8dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/tabLayout"
+        tools:visibility="visible" />
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:background="@color/lightGrey"
-        app:layout_constraintTop_toBottomOf="@id/layoutTop"
+        app:layout_constraintTop_toBottomOf="@id/tabLayout"
         app:layout_constraintBottom_toTopOf="@id/layoutBottom" />
 </androidx.constraintlayout.widget.ConstraintLayout>
