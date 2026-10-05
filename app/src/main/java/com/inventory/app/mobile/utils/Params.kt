@@ -8,7 +8,7 @@ class Params {
         const val MIN_POWER = 1
         const val MAX_POWER = 30
 
-        const val DEBUG = false
+        const val DEBUG = true
 
         const val MENU_PAIRING = "pair"
         const val MENU_PLACEMENT = "plc"

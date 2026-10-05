@@ -36,7 +36,12 @@ class DialogListActivity : AppCompatActivity(), DialogItemAdapter.OnItemClick {
         const val EXTRA_MODE = "extra_mode"
         const val MODE_LOCATION = 0
         const val MODE_MASTER_ITEM = 1
+        const val EXTRA_MULTI_SELECT = "extra_multi_select"
+        const val EXTRA_SELECTED_IDS = "extra_selected_ids"
+        const val EXTRA_SELECTED_TEXTS = "extra_selected_texts"
         const val RESULT_ITEM_ID = "result_item_id"
+        const val RESULT_ITEM_IDS = "result_item_ids"
+        const val RESULT_ITEM_TEXTS = "result_item_texts"
         const val RESULT_ITEM_TEXT = "result_item_text"
     }
 
@@ -48,6 +53,8 @@ class DialogListActivity : AppCompatActivity(), DialogItemAdapter.OnItemClick {
     private var level: Int = 0
     private var parentId: Long = 0
     private var mode: Int = MODE_LOCATION
+    private var multiSelect = false
+    private val selected = LinkedHashMap<Long, String>()
     private var currentCall: Call<GetLocationsResponse?>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,6 +66,12 @@ class DialogListActivity : AppCompatActivity(), DialogItemAdapter.OnItemClick {
         level = intent.getIntExtra(EXTRA_LEVEL, 0)
         parentId = intent.getLongExtra(EXTRA_PARENT_ID, 0L)
         mode = intent.getIntExtra(EXTRA_MODE, MODE_LOCATION)
+        multiSelect = intent.getBooleanExtra(EXTRA_MULTI_SELECT, false)
+        if (multiSelect) {
+            val ids = intent.getLongArrayExtra(EXTRA_SELECTED_IDS) ?: LongArray(0)
+            val texts = intent.getStringArrayExtra(EXTRA_SELECTED_TEXTS) ?: emptyArray()
+            ids.forEachIndexed { ix, id -> selected[id] = texts.getOrElse(ix) { "" } }
+        }
 
         val title = intent.getStringExtra(EXTRA_TITLE) ?: "Select"
         setTitle(title)
@@ -72,6 +85,19 @@ class DialogListActivity : AppCompatActivity(), DialogItemAdapter.OnItemClick {
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         binding.recyclerView.addItemDecoration(DividerItemDecoration(this, RecyclerView.VERTICAL))
         binding.recyclerView.adapter = adapter
+        adapter.selectedIds = selected.keys.toSet()
+
+        if (multiSelect) {
+            binding.buttonDone.visibility = View.VISIBLE
+            binding.buttonDone.setOnClickListener {
+                val result = Intent().apply {
+                    putExtra(RESULT_ITEM_IDS, selected.keys.toLongArray())
+                    putExtra(RESULT_ITEM_TEXTS, selected.values.toTypedArray())
+                }
+                setResult(RESULT_OK, result)
+                finish()
+            }
+        }
 
         binding.etSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -145,6 +171,12 @@ class DialogListActivity : AppCompatActivity(), DialogItemAdapter.OnItemClick {
     }
 
     override fun onClick(item: Select2Item) {
+        if (multiSelect) {
+            if (selected.containsKey(item.value)) selected.remove(item.value) else selected[item.value] = item.text
+            adapter.selectedIds = selected.keys.toSet()
+            adapter.notifyDataSetChanged()
+            return
+        }
         val result = Intent().apply {
             putExtra(RESULT_ITEM_ID, item.value)
             putExtra(RESULT_ITEM_TEXT, item.text)

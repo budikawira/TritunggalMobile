@@ -81,6 +81,10 @@
     <string name="master_item">Master Item</string>
     <string name="select_master_item">Select Master Item</string>
     <string name="include_sublocation">Include Sub Location</string>
+    <string name="sku_filter">SKU Filter (optional)</string>
+    <string name="select_sku">Select SKU</string>
+    <string name="stock_opname_note">Note (optional)</string>
+    <string name="done">Done</string>
 
     <string name="search_master_item">Search Master Item</string>
     <string name="sku">PN</string>

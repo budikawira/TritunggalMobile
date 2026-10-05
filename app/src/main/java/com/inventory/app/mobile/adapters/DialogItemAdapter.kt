@@ -15,6 +15,9 @@ class DialogItemAdapter(
         fun onClick(item: Select2Item)
     }
 
+    // multi-select mode: ids of the rows to mark as selected
+    var selectedIds: Set<Long> = emptySet()
+
     class ViewHolder(val binding: RowDialogItemBinding) : RecyclerView.ViewHolder(binding.root)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -24,7 +27,7 @@ class DialogItemAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = data[position]
-        holder.binding.textName.text = item.text
+        holder.binding.textName.text = if (selectedIds.contains(item.value)) "✓ " + item.text else item.text
         holder.itemView.setOnClickListener { listener.onClick(item) }
     }
 

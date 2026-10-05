@@ -329,7 +329,8 @@ class StockOpnameScanFragment : BaseFragment(), StockOpnameAdapter.OnItemClick {
             mStockOpnameId,
             args.locationId,
             scanned,
-            notScanned
+            notScanned,
+            args.note.trim().ifEmpty { null }
         )
 
         var token = ("Bearer " + sessionManager.getSessionId())
@@ -371,6 +372,10 @@ class StockOpnameScanFragment : BaseFragment(), StockOpnameAdapter.OnItemClick {
         var param = GetItemByLocationRequest()
         param.locationId = args.locationId
         param.includeSubLocation = args.includeSubLocation
+        val skuIds = args.skuIds.split(",").mapNotNull { it.trim().toLongOrNull() }
+        if (skuIds.isNotEmpty()) {
+            param.masterItemIds = ArrayList(skuIds)
+        }
 
         var request = apiInterface.getItemByLocation(
             "Bearer " + sessionManager.getSessionId(),

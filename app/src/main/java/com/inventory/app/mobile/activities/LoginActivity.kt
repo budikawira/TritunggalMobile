@@ -21,6 +21,7 @@ import com.inventory.app.mobile.utils.rest.requests.BaseRequest
 import com.inventory.app.mobile.utils.rest.requests.SignInRequest
 import com.inventory.app.mobile.utils.rest.response.BaseResponse
 import com.inventory.app.mobile.utils.rest.response.SignInResponse
+import io.sentry.Sentry
 import okhttp3.Headers
 import retrofit2.Call
 import retrofit2.Callback
@@ -33,6 +34,12 @@ class LoginActivity : AppCompatActivity() {
 
     private lateinit var apiInterface: ApiInterface
     private lateinit var sessionManager : SessionManager
+
+    // Temporary: sends test events to Sentry. Remove the call in onCreate once verified.
+    private fun testSentry() {
+//        Sentry.captureMessage("Sentry test message from testSentry()")
+//        Sentry.captureException(RuntimeException("Sentry test exception from testSentry()"))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,6 +55,7 @@ class LoginActivity : AppCompatActivity() {
         }
         actionBar?.hide()
         sessionManager = SessionManager(this)
+        testSentry()
 
         if (DEBUG) {
             bindingContent.etUsername.setText("admin")
@@ -109,4 +117,5 @@ class LoginActivity : AppCompatActivity() {
         startActivity(Intent(this@LoginActivity, SetupActivity::class.java))
         finish()
     }
+
 }

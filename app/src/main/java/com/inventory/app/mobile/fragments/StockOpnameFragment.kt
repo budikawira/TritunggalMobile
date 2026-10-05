@@ -28,6 +28,7 @@ class StockOpnameFragment : BaseFragment() {
         private const val REQUEST_SHELF_SLOT = 1003
         private const val REQUEST_LOCATION3  = 1004
         private const val REQUEST_LOCATION4  = 1005
+        private const val REQUEST_SKU        = 1006
     }
 
     private var _binding: FragmentStockOpnameBinding? = null
@@ -38,6 +39,7 @@ class StockOpnameFragment : BaseFragment() {
     private var selectedLocation2: Select2Item? = null
     private var selectedLocation3: Select2Item? = null
     private var selectedLocation4: Select2Item? = null
+    private var selectedSkus = ArrayList<Select2Item>()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -59,6 +61,9 @@ class StockOpnameFragment : BaseFragment() {
         binding.textLocation2.setOnClickListener { openShelfSlotDialog() }
         binding.textLocation3.setOnClickListener { openLocation3Dialog() }
         binding.textLocation4.setOnClickListener { openLocation4Dialog() }
+
+        binding.textSku.setOnClickListener { openSkuDialog() }
+        setupClearIcon(binding.textSku) { setSkus(ArrayList()) }
 
         setupClearIcon(binding.textLocation) { clearFrom(0) }
         setupClearIcon(binding.textLocation1) { clearFrom(1) }
@@ -92,6 +97,8 @@ class StockOpnameFragment : BaseFragment() {
                 .actionStockOpnameFragmentToStockOpnameScanFragment(
                     locationId  = selectedLocationId,
                     includeSubLocation = binding.chkSubLoc.isChecked,
+                    skuIds      = selectedSkus.joinToString(",") { it.value.toString() },
+                    note        = binding.editNote.text?.toString()?.trim() ?: "",
                     name        = names.joinToString(" ➤ ")
                 )
             findNavController().navigate(action)
@@ -136,6 +143,30 @@ class StockOpnameFragment : BaseFragment() {
         startDialog(REQUEST_LOCATION4, getString(R.string.location_level_4), 4, parentId)
     }
 
+    private fun openSkuDialog() {
+        val intent = Intent(requireActivity(), DialogListActivity::class.java).apply {
+            putExtra(DialogListActivity.EXTRA_TITLE, getString(R.string.sku_filter))
+            putExtra(DialogListActivity.EXTRA_MODE, DialogListActivity.MODE_MASTER_ITEM)
+            putExtra(DialogListActivity.EXTRA_MULTI_SELECT, true)
+            putExtra(DialogListActivity.EXTRA_SELECTED_IDS, selectedSkus.map { it.value }.toLongArray())
+            putExtra(DialogListActivity.EXTRA_SELECTED_TEXTS, selectedSkus.map { it.text }.toTypedArray())
+        }
+        startActivityForResult(intent, REQUEST_SKU)
+    }
+
+    private fun setSkus(skus: ArrayList<Select2Item>) {
+        selectedSkus = skus
+        if (skus.isEmpty()) {
+            binding.textSku.text = ""
+            hideClearIcon(binding.textSku)
+        } else {
+            // master item text is "<sku> - <name>", show the SKU codes only
+            binding.textSku.text = skus.joinToString(", ") { it.text.substringBefore(" - ") }
+            binding.textSku.setTextColor(Color.BLACK)
+            showClearIcon(binding.textSku)
+        }
+    }
+
     private fun startDialog(requestCode: Int, title: String, level: Int, parentId: Long) {
         val intent = Intent(requireActivity(), DialogListActivity::class.java).apply {
             putExtra(DialogListActivity.EXTRA_TITLE, title)
@@ -151,6 +182,15 @@ class StockOpnameFragment : BaseFragment() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode != Activity.RESULT_OK || data == null) return
+
+        if (requestCode == REQUEST_SKU) {
+            val ids = data.getLongArrayExtra(DialogListActivity.RESULT_ITEM_IDS) ?: LongArray(0)
+            val texts = data.getStringArrayExtra(DialogListActivity.RESULT_ITEM_TEXTS) ?: emptyArray()
+            val list = ArrayList<Select2Item>()
+            ids.forEachIndexed { ix, id -> list.add(Select2Item(id, texts.getOrElse(ix) { "" })) }
+            setSkus(list)
+            return
+        }
 
         val id   = data.getLongExtra(DialogListActivity.RESULT_ITEM_ID, 0L)
         val text = data.getStringExtra(DialogListActivity.RESULT_ITEM_TEXT) ?: ""

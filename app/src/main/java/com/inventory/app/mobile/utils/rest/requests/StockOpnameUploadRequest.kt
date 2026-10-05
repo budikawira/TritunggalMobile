@@ -4,5 +4,6 @@ class StockOpnameUploadRequest(
     var stockOpnameId : Long,
     var locationId : Long?,
     var scannedItemIds : ArrayList<Long>,
-    var notScannedItemIds : ArrayList<Long>
+    var notScannedItemIds : ArrayList<Long>,
+    var note : String? = null
     )

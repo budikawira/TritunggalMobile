@@ -4,7 +4,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.navigation.safe.args)
-    id("io.sentry.android.gradle") version "5.11.0" apply false
+    id("io.sentry.android.gradle") version "6.23.0" apply false
 }
 
 android {
@@ -15,8 +15,8 @@ android {
         applicationId = "com.inventory.app.mobile"
         minSdk = 24
         targetSdk = 35
-        versionCode = 10204
-        versionName = "1.2.4"
+        versionCode = 10205
+        versionName = "1.2.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -132,7 +132,7 @@ dependencies {
     implementation(libs.androidx.camera.view) // CameraX View (for Preview)
 
     //logging
-    implementation("io.sentry:sentry-android:6.30.0")
+    implementation("io.sentry:sentry-android:8.59.0")
 
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.*"))))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3") // Or the latest stable version
